@@ -3,6 +3,7 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+import sys
 from threading import Thread
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
@@ -11,6 +12,7 @@ from AuthenticationSystem.Serv.Base import ABCServ
 from AuthenticationSystem.Serv.Base import PoolRegister
 from AuthenticationSystem.Serv.Base import ServRegister
 from AuthenticationSystem.Serv.Mixin.Login import LoginMixin
+from AuthenticationSystem.Events import Login
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.log import Logging
@@ -27,8 +29,20 @@ class Client(ABCServ, LoginMixin):
         super().__init__(conn, addr)
 
     def thread(self):
-        user_data, db_client = self._login(self.TYPE)
-        print(user_data, db_client)
+        raw_user_data, db_client = self._login(self.TYPE)
+        user_data = raw_user_data.dump().values()
+        user_data = list(user_data)[0]
+
+        if user_data["client_type"] != self.TYPE:
+            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
+            self.logger.error(
+                f"[Client] Invalid client type {repr_}"
+            )
+            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
+            sys.exit(1)
+
+        self.logger.debug(f"[Client] Login success (addr='{self._address}' user_data='{user_data}')")
+
         self._cSocket.close()
         db_client.close()
         self.logger.error("[Client] Exit")
@@ -45,7 +59,14 @@ class ChatServer(ABCServ, LoginMixin):
 
     def thread(self):
         user_data, db_client = self._login(self.TYPE)
-        print(user_data, db_client)
+        user_data = user_data.dump().values()
+        user_data = list(user_data)[0]
+
+        if user_data["client_type"] != self.TYPE:
+            self.logger.error(f"[ChatServer] Invalid client type (type='{self.TYPE}')")
+
+        self.logger.debug(f"[ChatServer] Login success (user_data='{user_data}')")
+
         self._cSocket.close()
         db_client.close()
         self.logger.error("[ChatServer] Exit")

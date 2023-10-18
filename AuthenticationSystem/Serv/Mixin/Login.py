@@ -90,7 +90,7 @@ class LoginMixin:
 
         raise LoginDatabaseFailedError(ret)
 
-    def _login(self, client_type):
+    def _login(self, client_type) -> tuple[Login.ACK_DATA, DataBaseClient]:
         self.CLIENT_TYPE = client_type
 
         addr = self._cSocket.getpeername()

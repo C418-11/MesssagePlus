@@ -41,6 +41,19 @@ class EventWithData(Event):
     def dump(self) -> dict:
         ...
 
+    def __getattribute__(self, item):
+        try:
+            return object.__getattribute__(self, item)
+        except AttributeError:
+            try:
+                return self.dump()[item]
+            except KeyError:
+                pass
+            raise
+
+    def __repr__(self):
+        return f"{self.dump()}"
+
 
 EventDict = {}
 

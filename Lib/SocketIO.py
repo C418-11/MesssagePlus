@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import json
 import pickle
 import socket
 import sys
@@ -202,6 +202,11 @@ class SocketIo:
         size_of = byte.__sizeof__()
         self._cSocket.sendall(struct.pack('i', size_of))
         self._cSocket.sendall(byte)
+
+    def send_json(self, _json: Union[list, tuple, str, dict, set, bool, None], encode="utf-8"):
+        txt = json.dumps(_json)
+        byte = txt.encode(encode)
+        self.send(byte)
 
     def send_obj(self, obj):
         byte = pickle.dumps(obj)

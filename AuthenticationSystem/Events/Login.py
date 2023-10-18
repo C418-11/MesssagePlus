@@ -58,4 +58,35 @@ class _TimeOut(Event):
 LOGIN_TIMEOUT = _TimeOut
 
 
-__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT")
+class _InvalidClientType(EventWithData):
+    Name = "Login.INVALID_CLIENT_TYPE"
+
+    def __init__(self, client_type, need_type):
+        self._client_type = client_type
+        self._need_type = need_type
+
+    @property
+    def client_type(self):
+        return self._client_type
+
+    @property
+    def need_type(self):
+        return self._need_type
+
+    @classmethod
+    def load(cls, _json):
+        return cls(**_json[cls.Name])
+
+    def dump(self):
+        return {
+            self.Name: {
+                "client_type": self._client_type,
+                "need_type": self._need_type
+            }
+        }
+
+
+INVALID_CLIENT_TYPE = _InvalidClientType
+
+
+__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE")
