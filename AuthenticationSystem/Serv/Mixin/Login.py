@@ -5,6 +5,7 @@ __version__ = "0.1"
 
 import sys
 import traceback
+from typing import Union
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
@@ -149,17 +150,20 @@ class LoginMixin:
 
     _login_Config = _Config
     TIMEOUT = _login_Config.timeout
-    CLIENT_TYPE = None
+    TYPE: Union[None, str]
     login_logger = _login_logger
 
     def _init_db_client(self):
-        return _init_db_client(self.login_logger, self.TIMEOUT, self.CLIENT_TYPE)
+        return _init_db_client(self.login_logger, self.TIMEOUT, self.TYPE)
 
-    def _login(self, client_type) -> tuple[Login.ACK_DATA, DataBaseClient]:
-        self.CLIENT_TYPE = client_type
+    def _login(self, client_type=None) -> tuple[Login.ACK_DATA, DataBaseClient]:
+        if (client_type is None) and (self.TYPE is None):
+            raise ValueError("client_type is None")
+        if self.TYPE is None:
+            self.TYPE = client_type
 
         addr = self._cSocket.getpeername()
-        self.login_logger.debug(f"[Login][{self.CLIENT_TYPE}] Recv new login request (addr='{addr}')")
+        self.login_logger.debug(f"[Login][{self.TYPE}] Recv new login request (addr='{addr}')")
         old_timeout = self._cSocket.gettimeout()
         self._cSocket.settimeout(self.TIMEOUT)
         self._cSocket.send(Login.ASK_DATA().to_str().encode("utf-8"))
@@ -171,11 +175,11 @@ class LoginMixin:
             load_success = True
         except (ConnectionResetError, TimeoutError, EOFError) as err:
             self.login_logger.info(
-                f"[Login][{self.CLIENT_TYPE}] Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
+                f"[Login][{self.TYPE}] Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
             )
         except Exception as err:
             self.login_logger.error(
-                f"[Login][{self.CLIENT_TYPE}] An un except exception recv (exc='{type(err.__name__)}: {err}')"
+                f"[Login][{self.TYPE}] An un except exception recv (exc='{type(err.__name__)}: {err}')"
             )
             traceback.print_exception(err, file=sys.stderr)
 

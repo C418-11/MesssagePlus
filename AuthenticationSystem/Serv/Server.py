@@ -18,82 +18,76 @@ from Lib.SocketIO import SocketIo
 from Lib.database.DataBase import DataBaseClient
 from Lib.log import Logging
 from Lib.simple_tools import ThreadPool
+from abc import ABC
+from abc import abstractmethod
+
+
+class LoginManagerMixin(ABCService, LoginMixin, ABC):
+
+    db_client: DataBaseClient
+
+    @property
+    @abstractmethod
+    def logger(self) -> Logging.Logger:
+        ...
+
+    @abstractmethod
+    def __init__(self, conn: SocketIo, addr: Address):
+        super().__init__(conn, addr)
+
+    def _stop(self):
+        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
+        self._cSocket.close()
+        self.db_client.close()
+        self.logger.error(f"[{self.TYPE}] Exit")
+        sys.exit(1)
+
+    def _login_all(self):
+        self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
+
+        raw_user_data, db_client = super()._login()
+        self.db_client = db_client
+        user_data = raw_user_data.dump().values()
+        user_data = list(user_data)[0]
+
+        if user_data["client_type"] != self.TYPE:
+            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
+            self.logger.error(
+                f"[{self.TYPE}] Invalid client type {repr_}"
+            )
+            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
+            self._stop()
+
+        self._cSocket.send_json(Login.SUCCESS().dump())
+        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
+
+        self._stop()
 
 
 @ServiceTypeRegistry
-class Client(ABCService, LoginMixin):
+class Client(ABCService, LoginManagerMixin):
     Config = ServerConfig.ClientType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "Client"
-    db_client: DataBaseClient
 
     def __init__(self, conn, addr, *_, **__):
         super().__init__(conn, addr)
 
-    def _stop(self):
-        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
-        self._cSocket.close()
-        self.db_client.close()
-        self.logger.error(f"[{self.TYPE}] Exit")
-        sys.exit(1)
-
     def start(self):
-        self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
-
-        raw_user_data, db_client = self._login(self.TYPE)
-        self.db_client = db_client
-        user_data = raw_user_data.dump().values()
-        user_data = list(user_data)[0]
-
-        if user_data["client_type"] != self.TYPE:
-            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
-            self.logger.error(
-                f"[{self.TYPE}] Invalid client type {repr_}"
-            )
-            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
-            self._stop()
-
-        self._cSocket.send_json(Login.SUCCESS().dump())
-        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
-
-        self._stop()
+        self._login_all()
 
 
 @ServiceTypeRegistry
-class ChatServer(ABCService, LoginMixin):
+class ChatServer(ABCService, LoginManagerMixin):
     Config = ServerConfig.ChatServerType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "ChatServer"
-    db_client: DataBaseClient
 
     def __init__(self, conn, addr, *_, **__):
         super().__init__(conn, addr)
 
-    def _stop(self):
-        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
-        self._cSocket.close()
-        self.db_client.close()
-        self.logger.error(f"[{self.TYPE}] Exit")
-        sys.exit(1)
-
     def start(self):
-        raw_user_data, db_client = self._login(self.TYPE)
-        self.db_client = db_client
-        user_data = raw_user_data.dump().values()
-        user_data = list(user_data)[0]
-
-        if user_data["client_type"] != self.TYPE:
-            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
-            self.logger.error(
-                f"[{self.TYPE}] Invalid client type {repr_}"
-            )
-            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
-            self._stop()
-
-        self._cSocket.send_json(Login.SUCCESS().dump())
-        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
-
-        self._stop()
+        self._login_all()
 
 
 @PoolTypeRegistry
