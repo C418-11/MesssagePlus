@@ -11,6 +11,7 @@ from collections import deque
 from numbers import Integral
 from numbers import Real
 from threading import Thread
+from typing import Any
 from typing import Tuple
 from typing import Union
 
@@ -219,7 +220,7 @@ class SocketIo:
         self._cSocket.settimeout(value)
 
     def getpeername(self):
-        return self._cSocket.getpeername()
+        return Address(*self._cSocket.getpeername())
 
 
 class Server:
@@ -267,7 +268,7 @@ class Server:
         self._running = False
         self._s_socket.close()
 
-    def bind(self, address: Union[Address, tuple[str, int]]):
+    def bind(self, address: Union[Address, tuple[Any, ...], str, bytes]):
         if isinstance(address, Address):
             address = address.get()
         self._address = address
