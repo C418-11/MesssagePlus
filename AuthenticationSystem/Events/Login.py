@@ -4,7 +4,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 
-from AuthenticationSystem.Events.Base import Event, EventWithData
+from AuthenticationSystem.Events.Base import Event, EventWithData, SuccessEvent, FailEvent
 
 
 class _AskData(Event):
@@ -51,14 +51,14 @@ class _AckData(EventWithData):
 ACK_DATA = _AckData
 
 
-class _TimeOut(Event):
+class _TimeOut(Event, FailEvent):
     Name = "Login.LOGIN_TIMEOUT"
 
 
 LOGIN_TIMEOUT = _TimeOut
 
 
-class _InvalidClientType(EventWithData):
+class _InvalidClientType(EventWithData, FailEvent):
     Name = "Login.INVALID_CLIENT_TYPE"
 
     def __init__(self, client_type, need_type):
@@ -89,4 +89,11 @@ class _InvalidClientType(EventWithData):
 INVALID_CLIENT_TYPE = _InvalidClientType
 
 
-__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE")
+class _LoginSuccess(Event, SuccessEvent):
+    Name = "Login.LOGIN_SUCCESS"
+
+
+SUCCESS = _LoginSuccess
+
+
+__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE", "SUCCESS")

@@ -185,15 +185,17 @@ class ABCDataBase(ABC):
         return paths
 
     @abstractmethod
-    def create(self, __store, __store_name: str) -> None: ...
+    def create(self, __store_type, __store_name: str) -> None: ...
 
     @abstractmethod
     def log(self, msg: str, operator: str) -> None: ...
 
     @staticmethod
     def BinJsonReader(__file_path: str):
+        txt = ""
         with open(__file_path, mode="rb") as file:
-            data = json.loads(file.read().decode("utf-8"))
+            txt += file.read(1024*4).decode("utf-8")
+        data = json.loads(txt)
         return data
 
     @staticmethod

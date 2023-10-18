@@ -12,28 +12,28 @@ from ..ABC import ABCServer
 
 class StoreEvent(Event):
 
-    def __init__(self, database, store):
-        self.database = database
-        self.store = store
+    def __init__(self, database_name, store_name):
+        self.database_name = database_name
+        self.store_name = store_name
 
     def db_obj(self, __server: ABCServer) -> ABCDataBase:
-        return __server[self.database]
+        return __server[self.database_name]
 
     def store_obj(self, __server: ABCServer) -> ABCStore:
         db_obj = self.db_obj(__server)
-        return db_obj[self.store]
+        return db_obj[self.store_name]
 
 
 @RegEvent
 class CreateStore(StoreEvent):
     raw = "STORE.CREATE_STORE"
 
-    def __init__(self, database, store, name):
-        super().__init__(database, store)
-        self.name = name
+    def __init__(self, database_name, store_type, name):
+        super().__init__(database_name, name)
+        self.store_type = store_type
 
     def func(self, server: ABCServer, **_kwargs):
-        self.db_obj(server).create(self.store, self.name)
+        self.db_obj(server).create(self.store_type, self.store_name)
 
 
 CREATE = CreateStore

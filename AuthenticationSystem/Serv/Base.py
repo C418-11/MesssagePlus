@@ -10,13 +10,13 @@ from typing import Type
 from Lib.SocketIO import SocketIo, Address
 
 
-class ABCServ(ABC):
+class ABCService(ABC):
     def __init__(self, conn: SocketIo, addr: Address):
         self._cSocket = conn
         self._address = addr
 
     @abstractmethod
-    def thread(self):
+    def start(self):
         """服务启动入口"""
 
     @property
@@ -25,10 +25,10 @@ class ABCServ(ABC):
         """类型名"""
 
 
-class ABCPool(ABC):
+class ABCServicePool(ABC):
 
     @abstractmethod
-    def add(self, conn, addr, data):
+    def add_service(self, conn, addr, data):
         """添加新的服务入池"""
 
     @property
@@ -37,28 +37,29 @@ class ABCPool(ABC):
         """类型名"""
 
 
-ServTypes = {}
-PoolTypes = {}
+ServiceTypes = {}
+ServicePoolTypes = {}
 
 
-def ServRegister(cls: ABCServ):
-    try:
-        ServTypes[cls.TYPE]
-    except KeyError:
-        ServTypes[cls.TYPE] = cls
-    else:
-        raise ValueError(f"Type '{cls.TYPE}' already exists")
-    return cls
+def ServiceTypeRegistry(service_class: Type[ABCService]):
+    if service_class.TYPE in ServiceTypes:
+        raise ValueError(f"Service type '{service_class.TYPE}' already exists")
+    ServiceTypes[service_class.TYPE] = service_class
+    return service_class
 
 
-def PoolRegister(cls: Type[ABCPool]):
-    try:
-        PoolTypes[cls.TYPE]
-    except KeyError:
-        PoolTypes[cls.TYPE] = cls()
-    else:
-        raise ValueError(f"Type '{cls.TYPE}' already exists")
-    return cls
+def PoolTypeRegistry(pool_class: Type[ABCServicePool]):
+    if pool_class.TYPE in ServicePoolTypes:
+        raise ValueError(f"Pool type '{pool_class.TYPE}' already exists")
+    ServicePoolTypes[pool_class.TYPE] = pool_class()
+    return pool_class
 
 
-__all__ = ("ServTypes", "PoolTypes", "ABCServ", "ABCPool", "ServRegister", "PoolRegister")
+__all__ = (
+    "ServiceTypes",
+    "ServicePoolTypes",
+    "ABCService",
+    "ABCServicePool",
+    "ServiceTypeRegistry",
+    "PoolTypeRegistry"
+)

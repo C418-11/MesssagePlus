@@ -9,7 +9,7 @@ from threading import Thread
 from typing import Union, Any
 
 from AuthenticationSystem.Config.WebConfig import ServerConfig
-from AuthenticationSystem.Serv.Base import PoolTypes
+from AuthenticationSystem.Serv.Base import ServicePoolTypes
 from Lib.SocketIO import Address
 from Lib.SocketIO import Server as SocketServer
 from Lib.SocketIO import SocketIo
@@ -60,7 +60,7 @@ class Server(SocketServer):
         js = byte_data.decode(encoding="utf-8")
         data = json.loads(js)
 
-        PoolTypes[data["type"]].add(conn, addr, data)
+        ServicePoolTypes[data["type"]].add_service(conn, addr, data)
 
         self._classifying_serv_pool.remove(uuid)
         sys.exit(0)

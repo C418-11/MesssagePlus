@@ -63,4 +63,12 @@ def EventRegister(cls: Event):
     return cls
 
 
-__all__ = ("Event", "EventDict", "EventRegister", "EventWithData")
+class SuccessEvent(ABC):
+    ...
+
+
+class FailEvent(ABC):
+    ...
+
+
+__all__ = ("Event", "EventDict", "EventRegister", "EventWithData", "SuccessEvent", "FailEvent")

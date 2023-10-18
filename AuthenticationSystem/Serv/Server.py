@@ -7,73 +7,97 @@ import sys
 from threading import Thread
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
-from AuthenticationSystem.Serv.Base import ABCPool
-from AuthenticationSystem.Serv.Base import ABCServ
-from AuthenticationSystem.Serv.Base import PoolRegister
-from AuthenticationSystem.Serv.Base import ServRegister
+from AuthenticationSystem.Serv.Base import ABCServicePool
+from AuthenticationSystem.Serv.Base import ABCService
+from AuthenticationSystem.Serv.Base import PoolTypeRegistry
+from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
 from AuthenticationSystem.Serv.Mixin.Login import LoginMixin
 from AuthenticationSystem.Events import Login
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
+from Lib.database.DataBase import DataBaseClient
 from Lib.log import Logging
 from Lib.simple_tools import ThreadPool
 
 
-@ServRegister
-class Client(ABCServ, LoginMixin):
+@ServiceTypeRegistry
+class Client(ABCService, LoginMixin):
     Config = ServerConfig.ClientType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "Client"
+    db_client: DataBaseClient
 
     def __init__(self, conn, addr, *_, **__):
         super().__init__(conn, addr)
 
-    def thread(self):
+    def _stop(self):
+        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
+        self._cSocket.close()
+        self.db_client.close()
+        self.logger.error(f"[{self.TYPE}] Exit")
+        sys.exit(1)
+
+    def start(self):
+        self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
+
         raw_user_data, db_client = self._login(self.TYPE)
+        self.db_client = db_client
         user_data = raw_user_data.dump().values()
         user_data = list(user_data)[0]
 
         if user_data["client_type"] != self.TYPE:
             repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
             self.logger.error(
-                f"[Client] Invalid client type {repr_}"
+                f"[{self.TYPE}] Invalid client type {repr_}"
             )
             self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
-            sys.exit(1)
+            self._stop()
 
-        self.logger.debug(f"[Client] Login success (addr='{self._address}' user_data='{user_data}')")
+        self._cSocket.send_json(Login.SUCCESS().dump())
+        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
 
-        self._cSocket.close()
-        db_client.close()
-        self.logger.error("[Client] Exit")
+        self._stop()
 
 
-@ServRegister
-class ChatServer(ABCServ, LoginMixin):
+@ServiceTypeRegistry
+class ChatServer(ABCService, LoginMixin):
     Config = ServerConfig.ChatServerType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "ChatServer"
+    db_client: DataBaseClient
 
     def __init__(self, conn, addr, *_, **__):
         super().__init__(conn, addr)
 
-    def thread(self):
-        user_data, db_client = self._login(self.TYPE)
-        user_data = user_data.dump().values()
+    def _stop(self):
+        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
+        self._cSocket.close()
+        self.db_client.close()
+        self.logger.error(f"[{self.TYPE}] Exit")
+        sys.exit(1)
+
+    def start(self):
+        raw_user_data, db_client = self._login(self.TYPE)
+        self.db_client = db_client
+        user_data = raw_user_data.dump().values()
         user_data = list(user_data)[0]
 
         if user_data["client_type"] != self.TYPE:
-            self.logger.error(f"[ChatServer] Invalid client type (type='{self.TYPE}')")
+            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
+            self.logger.error(
+                f"[{self.TYPE}] Invalid client type {repr_}"
+            )
+            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
+            self._stop()
 
-        self.logger.debug(f"[ChatServer] Login success (user_data='{user_data}')")
+        self._cSocket.send_json(Login.SUCCESS().dump())
+        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
 
-        self._cSocket.close()
-        db_client.close()
-        self.logger.error("[ChatServer] Exit")
+        self._stop()
 
 
-@PoolRegister
-class ClientPool(ABCPool):
+@PoolTypeRegistry
+class ClientServicePool(ABCServicePool):
     TYPE = "Client"
     Config = ServerConfig.ClientPoolType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
@@ -81,22 +105,22 @@ class ClientPool(ABCPool):
     def __init__(self):
         self._client_pool = ThreadPool()
 
-    def add(self, conn: SocketIo, addr: Address, *args, **kwargs):
-        self.logger.info(f"[ClientPool] Recv new request (addr='{addr}')")
+    def add_service(self, conn: SocketIo, addr: Address, *args, **kwargs):
+        self.logger.info(f"[ClientServicePool] Recv new request (addr='{addr}')")
 
         obj = Client(conn, addr, *args, **kwargs)
 
-        thread = Thread(target=obj.thread, daemon=True, name="ClientServ")
+        thread = Thread(target=obj.start, daemon=True, name="ClientServ")
 
         self._client_pool.add(thread)
-        self.logger.info(f"[ClientPool] Added thread obj to pool (addr='{addr}')")
+        self.logger.info(f"[ClientServicePool] Added thread obj to pool (addr='{addr}')")
         thread.start()
 
-        self.logger.debug(f"[ClientPool] started thread (addr='{addr}')")
+        self.logger.debug(f"[ClientServicePool] Started serv (addr='{addr}')")
 
 
-@PoolRegister
-class ChatServerPool(ABCPool):
+@PoolTypeRegistry
+class ChatServerServicePool(ABCServicePool):
     TYPE = "ChatServer"
     Config = ServerConfig.ChatServerPoolType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
@@ -104,19 +128,18 @@ class ChatServerPool(ABCPool):
     def __init__(self):
         self._chat_server_pool = ThreadPool()
 
-    def add(self, conn: SocketIo, addr: Address, *args, **kwargs):
-        """实例化+启动服务并扔进线程池"""
-        self.logger.info(f"[ChatServerPool] Recv new request '{addr}'")
+    def add_service(self, conn: SocketIo, addr: Address, *args, **kwargs):
+        self.logger.info(f"[ChatServerServicePool] Recv new request (addr='{addr}')")
 
         obj = ChatServer(conn, addr, *args, **kwargs)
 
-        thread = Thread(target=obj.thread, daemon=True, name="ChatServerServ")
+        thread = Thread(target=obj.start, daemon=True, name="ChatServerServ")
 
         self._chat_server_pool.add(thread)
-        self.logger.info(f"[ChatServerPool] Added thread obj to pool")
+        self.logger.info(f"[ChatServerServicePool] Added thread obj to pool (addr='{addr}')")
         thread.start()
 
-        self.logger.debug(f"[ChatServerPool] started thread'{addr}'")
+        self.logger.debug(f"[ChatServerServicePool] Started serv (addr='{addr}')")
 
 
 __all__ = ("Client", "ChatServer")

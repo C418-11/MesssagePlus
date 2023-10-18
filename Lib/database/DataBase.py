@@ -132,7 +132,7 @@ class DataBase(ABCDataBase):
                 self.log(msg=f"An error was raised while loading Store store_path={store_path} err={err}",
                          level=WARNING)
 
-    def create(self, __store, __store_name):
+    def create(self, __store_type, __store_name):
         store_path = self.store_path(__store_name)
 
         id_ = time.time()
@@ -147,7 +147,7 @@ class DataBase(ABCDataBase):
 
         BuildPath(path=store_path)
 
-        cls = self.store[__store]
+        cls = self.store[__store_type]
 
         self.BinJsonWriter(
             store_path + self.INFO_FILE,
@@ -232,7 +232,7 @@ class DataBaseServer(ABCServer):
         self.time_format = time_format
 
         self.logging = logging.Logger(name=name, level=log_level, stream=log_file)
-        self.logging.disabled = disable_log
+        self.logging.disable = disable_log
         self.log_format = log_format
 
         self.log(msg=f"Init name={self.name} path={self.path}", level=DEBUG)
@@ -365,7 +365,7 @@ class DataBaseServer(ABCServer):
             return_code = event_runner(event)
 
             try:
-                conn.send_obj(str(return_code))
+                conn.send_obj(return_code)
             except ConnectionResetError:
                 self.log(msg=f"{name} Lost Connect! reason={SOCKET.CONNECT_CLOSE}", level=INFO)
                 break

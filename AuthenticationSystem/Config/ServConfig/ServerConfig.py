@@ -12,6 +12,49 @@ from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.database import logging as db_logging
 
 
+class Data:
+    def __init__(self, data: dict):
+        self._data = {}
+        for d in data:
+            if type(data[d]) is dict:
+                self._data[d] = Data(data[d])
+            else:
+                self._data[d] = data[d]
+
+    def __getattribute__(self, item):
+        try:
+            return object.__getattribute__(self, item)
+        except AttributeError:
+            pass
+        return self._data[item]
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+
+class DataTypeAnnotation:
+    class Server:
+        name: str
+        address: list
+
+    class Userdata:
+        username: str
+        password: str
+
+    class BuiltinDatabase:
+        enable: bool
+        log_file: str
+        input_file: str
+        disable_log: bool
+        log_level: Union[str, int]
+        debug_mode: bool
+        max_connections: int
+
+    class AutoInit:
+        init_database: bool
+        init_store: bool
+
+
 class _DataBaseInjection:
 
     def __init__(self, parent: IO):
@@ -21,73 +64,52 @@ class _DataBaseInjection:
             os.path.join(self.parent.BASE_DIR, "database.json"): {
                 "key": "injection_login_database",
                 "data": {
-                    "server_name": "LoginDataBaseServer",
-                    "addr": ("127.0.0.1", 11451),
-                    "enable_builtin_db": True,
-                    "log_file": "stdout",
-                    "input_file": "stdin",
-                    "disable_log": False,
-                    "log_level": db_logging.NOTSET.name,
-                    "debug_mode": True,
-                    "listen": 10,
-                    "username": "default",
-                    "password": "default",
-                    "path": {
-                        "database_name": ".",
-                        "store_name": "LoginData"
+                    "Server": {
+                        "name": "LoginDataBaseServer",
+                        "address": ("127.0.0.1", 11451),
+                    },
+                    "Userdata": {
+                        "username": "default",
+                        "password": "default",
+                    },
+                    "BuiltinDatabase": {
+                        "enable": True,
+                        "log_file": "stdout",
+                        "input_file": "stdin",
+                        "disable_log": False,
+                        "log_level": db_logging.NOTSET.name,
+                        "debug_mode": True,
+                        "max_connections": 10,
+                    },
+                    "database_name": "LoginData",
+                    "store_list": [
+                        "Client",
+                        "ChatServer"
+                    ],
+                    "AutoInit": {
+                        "init_database": True,
+                        "init_store": True
                     }
                 }
             }
         })
 
-        self._files_is_init = False
+        self._data = None
 
     @property
-    def data(self) -> dict:
-        return self.parent.injection_login_database
+    def data(self) -> Data:
+        if self._data is None:
+            self._data = Data(self.parent.injection_login_database)
+        return self._data
 
-    server_name: str
-    addr: tuple[str, int]
-    enable_builtin_db: bool
-    log_level: Union[int, str]
-    debug_mode: bool
-    listen: int
-    disable_log: bool
+    Server: DataTypeAnnotation.Server
+    Userdata: DataTypeAnnotation.Userdata
+    BuiltinDatabase: DataTypeAnnotation.BuiltinDatabase
 
-    username: str
-    password: str
+    database_name: str
+    store_list: list
 
-    def _init_files(self):
-        std_o = {"stdout": sys.stdout, "stderr": sys.stderr, "stdin": sys.stdin}
-
-        for item in ["log_file", "input_file"]:
-            if self.data[item] in std_o:
-                self.data[item] = std_o[self.data[item]]
-
-            else:
-                self.data[item] = open(
-                    self.data[item], mode='a', encoding=self._ENCODING, newline=self._NEW_LINE
-                )
-
-    @property
-    def log_file(self) -> TextIO:
-        if not self._files_is_init:
-            self._init_files()
-        return self.data["log_file"]
-
-    @property
-    def input_file(self) -> TextIO:
-        if not self._files_is_init:
-            self._init_files()
-        return self.data["input_file"]
-
-    @property
-    def db_name(self) -> str:
-        return self.data["path"]["database_name"]
-
-    @property
-    def store_name(self) -> str:
-        return self.data["path"]["store_name"]
+    AutoInit: DataTypeAnnotation.AutoInit
 
     def __getattribute__(self, item):
         try:
@@ -98,6 +120,9 @@ class _DataBaseInjection:
             except KeyError:
                 pass
             raise
+
+    def __getitem__(self, item):
+        return self.__getattribute__(item)
 
 
 class _Login(IO, LogMixin):
@@ -161,7 +186,7 @@ class _ClientPool(IO, LogMixin):
 
     @property
     def BASE_DIR(self):
-        return "./Serv/Server/ClientPool/"
+        return "./Serv/Server/ClientServicePool/"
 
 
 ClientPoolType = _ClientPool()
@@ -174,7 +199,7 @@ class _ChatServerPool(IO, LogMixin):
 
     @property
     def BASE_DIR(self):
-        return "./Serv/Server/ChatServerPool/"
+        return "./Serv/Server/ChatServerServicePool/"
 
 
 ChatServerPoolType = _ChatServerPool()
