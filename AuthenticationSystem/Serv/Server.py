@@ -22,7 +22,7 @@ from abc import ABC
 from abc import abstractmethod
 
 
-class LoginManagerMixin(ABCService, LoginMixin, ABC):
+class LoginManagerMixin(LoginMixin, ABC):
 
     db_client: DataBaseClient
 
@@ -31,19 +31,15 @@ class LoginManagerMixin(ABCService, LoginMixin, ABC):
     def logger(self) -> Logging.Logger:
         ...
 
-    @abstractmethod
-    def __init__(self, conn: SocketIo, addr: Address):
-        super().__init__(conn, addr)
-
-    def _stop(self):
-        self.logger.debug(f"[{self.TYPE}] Stop (addr='{self._address}')")
+    def _stop(self, _addr):
+        self.logger.debug(f"[{self.TYPE}] Stop (addr='{_addr}')")
         self._cSocket.close()
         self.db_client.close()
         self.logger.error(f"[{self.TYPE}] Exit")
         sys.exit(1)
 
-    def _login_all(self):
-        self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
+    def _login_all(self, _addr):
+        self.logger.debug(f"[{self.TYPE}] Start (addr='{_addr}')")
 
         raw_user_data, db_client = super()._login()
         self.db_client = db_client
@@ -51,17 +47,17 @@ class LoginManagerMixin(ABCService, LoginMixin, ABC):
         user_data = list(user_data)[0]
 
         if user_data["client_type"] != self.TYPE:
-            repr_ = f"(addr='{self._address}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
+            repr_ = f"(addr='{_addr}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
             self.logger.error(
                 f"[{self.TYPE}] Invalid client type {repr_}"
             )
             self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
-            self._stop()
+            self._stop(_addr)
 
         self._cSocket.send_json(Login.SUCCESS().dump())
-        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{self._address}' user_data='{user_data}')")
+        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{_addr}' user_data='{user_data}')")
 
-        self._stop()
+        self._stop(_addr)
 
 
 @ServiceTypeRegistry
@@ -74,7 +70,7 @@ class Client(ABCService, LoginManagerMixin):
         super().__init__(conn, addr)
 
     def start(self):
-        self._login_all()
+        self._login_all(self._address)
 
 
 @ServiceTypeRegistry
@@ -87,7 +83,7 @@ class ChatServer(ABCService, LoginManagerMixin):
         super().__init__(conn, addr)
 
     def start(self):
-        self._login_all()
+        self._login_all(self._address)
 
 
 @PoolTypeRegistry
