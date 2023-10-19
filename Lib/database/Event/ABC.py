@@ -2,9 +2,10 @@
 
 import json
 from typing import Union
+
 from .BaseEventType import ABCEvent
-from .BaseEventType import SuccessEvent
 from .BaseEventType import FailedEvent
+from .BaseEventType import SuccessEvent
 from ..ABC import ABCServer
 
 

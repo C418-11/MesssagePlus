@@ -4,8 +4,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import os
-import sys
-from typing import Union, TextIO
+from typing import Union
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
@@ -75,7 +74,7 @@ class _DataBaseInjection:
                     "BuiltinDatabase": {
                         "enable": True,
                         "log_file": "stdout",
-                        "input_file": "stdin",
+                        "input_file": None,
                         "disable_log": False,
                         "log_level": db_logging.NOTSET.name,
                         "debug_mode": True,

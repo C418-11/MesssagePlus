@@ -2,11 +2,11 @@
 import json
 import pickle
 import socket
+import struct
 import sys
 import threading
 import time
 import traceback
-import struct
 from collections import deque
 from numbers import Integral
 from numbers import Real

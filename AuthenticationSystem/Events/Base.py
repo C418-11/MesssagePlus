@@ -4,8 +4,8 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import json
-from abc import abstractmethod
 from abc import ABC
+from abc import abstractmethod
 from typing import Self
 
 
