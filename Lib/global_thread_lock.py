@@ -16,7 +16,7 @@ class ProcessLock:
         """Lock names: log"""
         self.lock_name = lock_name.lower()
         self.locks = {
-            "Log".lower(): [OutputLock],
+            "Log".lower(): OutputLock,
         }
 
     def __call__(self, func):
@@ -28,7 +28,7 @@ class ProcessLock:
             func = func.__func__
 
         def wrapper(*args, **kwargs):
-            lock = self.locks.get(self.lock_name, None)[0]
+            lock = self.locks.get(self.lock_name, None)
             if lock is None:
                 # 如果找不到lock_name，则提示当前存在的lock_name
                 existing_lock_names = ', '.join(list(self.locks.keys()))
