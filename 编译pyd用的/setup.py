@@ -86,6 +86,7 @@ def _rename_file(file_name, replace, to):
     new_file_name = re.sub(replace, to, file_name)
     if file_name != new_file_name:
         os.rename(file_name, new_file_name)
+    print(f"Renamed {file_name} to {new_file_name}")
 
 
 def _rename_all(dir_path, replace, to, extension=".pyd"):

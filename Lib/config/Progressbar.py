@@ -8,11 +8,12 @@ from tqdm import tqdm
 TOTAL_CONFIG_FILE = 0
 
 ProgressBar = tqdm(
-        total=0,
+        total=-1,
         leave=False,
         unit="file",
         desc="ConfigFiles",
         file=sys.stdout,
+        colour=""
 )
 
 
