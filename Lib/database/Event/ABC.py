@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level = 3
 
 import json
 from typing import Union
@@ -54,7 +55,7 @@ class RunSuccess(Event, SuccessEvent):
     raw = "EVENT.RUN_SUCCESS"
 
     def __eq__(self, other):
-        return isinstance(other, type(self))
+        return isinstance(other, type(self)) or super().__eq__(other)
 
 
 RUN_SUCCESS = RunSuccess()

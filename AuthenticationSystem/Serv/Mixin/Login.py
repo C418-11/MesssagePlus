@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
@@ -89,16 +90,15 @@ def _init_db_client(login_logger, timeout, client_type):
 
     client.settimeout(old_timeout)
 
-    match ret:
-        case LOGIN.LOGIN_SUCCESS:
-            login_logger.info(f"{log_head} Login Success")
-            return client
-        case LOGIN.WRONG_PASSWORD:
-            login_logger.error(f"{log_head} Wrong DB password (pw='{_DBConfig.password}')")
-        case LOGIN.USER_NOT_FIND:
-            login_logger.error(f"{log_head} User Not Find (username='{_DBConfig.username}')")
-        case _:
-            login_logger.error(f"{log_head} unknown return value (value={ret.raw}: {ret})")
+    if ret == LOGIN.LOGIN_SUCCESS:
+        login_logger.info(f"{log_head} Login Success")
+        return client
+    elif ret == LOGIN.WRONG_PASSWORD:
+        login_logger.error(f"{log_head} Wrong DB password (pw='{_DBConfig.password}')")
+    elif ret == LOGIN.USER_NOT_FIND:
+        login_logger.error(f"{log_head} User Not Find (username='{_DBConfig.username}')")
+    else:
+        login_logger.error(f"{log_head} unknown return value (value={ret.raw}: {ret})")
 
     raise LoginDatabaseFailedError(ret)
 
