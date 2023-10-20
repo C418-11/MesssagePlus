@@ -10,6 +10,7 @@ from typing import Union
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.database import logging as db_logging
+from Lib.config.Progressbar import config_counter
 
 
 class Data:
@@ -125,6 +126,7 @@ class _DataBaseInjection:
         return self.__getattribute__(item)
 
 
+@config_counter
 class _Login(IO, LogMixin):
     def __init__(self):
         self.DEFAULT_FILES = {
@@ -153,6 +155,7 @@ class _Login(IO, LogMixin):
 Login = _Login()
 
 
+@config_counter
 class _Client(IO, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
@@ -166,6 +169,7 @@ class _Client(IO, LogMixin):
 ClientType = _Client()
 
 
+@config_counter
 class _ChatServer(IO, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
@@ -179,6 +183,7 @@ class _ChatServer(IO, LogMixin):
 ChatServerType = _ChatServer()
 
 
+@config_counter
 class _ClientPool(IO, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
@@ -192,6 +197,7 @@ class _ClientPool(IO, LogMixin):
 ClientPoolType = _ClientPool()
 
 
+@config_counter
 class _ChatServerPool(IO, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)

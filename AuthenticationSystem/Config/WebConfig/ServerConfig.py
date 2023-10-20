@@ -7,8 +7,10 @@ __version__ = "0.1"
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
+from Lib.config.Progressbar import config_counter
 
 
+@config_counter
 class Server(IO, LogMixin):
 
     def __init__(self):

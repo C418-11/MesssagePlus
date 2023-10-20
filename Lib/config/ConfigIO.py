@@ -12,6 +12,8 @@ from json import JSONDecodeError
 
 from Lib.log import Level
 from Lib.log import Logging
+from . import Progressbar
+from .Progressbar import config_counter
 
 
 class BaseIO:
@@ -42,7 +44,8 @@ class BaseIO:
 logger_args: dict
 
 
-class LoadBaseLoggerConfig(BaseIO):
+@config_counter(count=1)
+class _LoadBaseLoggerConfig(BaseIO):
     DefaultConfig = {
         "output_level": Level.DEBUG.level,
         "file": "stdout",
@@ -76,8 +79,11 @@ class LoadBaseLoggerConfig(BaseIO):
 
         logger_args = json_
 
+        Progressbar.update(0)
+        Progressbar.update(1)
 
-LoadBaseLoggerConfig()
+
+_LoadBaseLoggerConfig()
 
 
 class IO(ABC, BaseIO):
@@ -89,6 +95,9 @@ class IO(ABC, BaseIO):
         if self.DEFAULT_FILES is None:
             self.DEFAULT_FILES = {}
         self.data = {}
+
+        self._progress_bar_hook()
+
         for raw in self.DEFAULT_FILES:
             file_data = self.DEFAULT_FILES[raw]
             path = os.path.join(self._BASE_PATH, raw)
@@ -100,6 +109,25 @@ class IO(ABC, BaseIO):
                 self._logger.info(f"[Config](INIT LEVEL) Loaded config file (path='{path}')")
             except JSONDecodeError as err:
                 self._logger.error(f"[Config](INIT LEVEL) Configuration file format error (path='{path}' err='{err}')")
+                raise
+
+            Progressbar.update(1)
+
+    def _progress_bar_hook(self):
+        self._logger.debug(f"[Config](Progressbar Hook) Try to hook progress bar")
+        try:
+            checker = getattr(self, "check_count")
+        except AttributeError:
+            self._logger.debug(f"[Config](Progressbar Hook) No hook found")
+        else:
+            try:
+                checker(num=len(self.DEFAULT_FILES))
+                self._logger.debug(f"[Config](Progressbar Hook) Hooked progress bar")
+                return
+            except ValueError:
+                self._logger.error(
+                    f"[Config](Progressbar Hook) Configuration file count is inconsistent within the context"
+                )
                 raise
 
     @property
