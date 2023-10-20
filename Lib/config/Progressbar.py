@@ -3,6 +3,7 @@
 import sys
 
 from tqdm import tqdm
+from Lib.global_thread_lock import OutputLock
 
 
 TOTAL_CONFIG_FILE = 0
@@ -13,8 +14,10 @@ ProgressBar = tqdm(
         unit="file",
         desc="ConfigFiles",
         file=sys.stdout,
-        colour=""
 )
+
+
+ProgressBar.set_lock(OutputLock)
 
 
 def update(n=1, refresh=True):

@@ -5,13 +5,15 @@ import sys
 from datetime import datetime
 
 from Lib.log import Level
+from Lib.global_thread_lock import ProcessLock
 
 
 class Logger:
     level_list = Level.default_level_list
     FORMAT = "[{time}]({level}){text}\n"
+    lock = ProcessLock("log")
 
-    def __init__(self, output_level=Level.INFO, file=sys.stdout, warn_file=sys.stdout):
+    def __init__(self, output_level=Level.INFO, file=sys.stdout, warn_file=sys.stdout, lock=None):
         if type(output_level) is int:
             output_level = Level.Level.by_weight(output_level)[0]
         if type(output_level) is str:
@@ -21,6 +23,7 @@ class Logger:
             raise TypeError("File obj is not writeable")
         self._file = file
         self._warn_file = warn_file
+        self._lock = lock
 
     @classmethod
     def _format(cls, time_str, level, text):
@@ -31,11 +34,13 @@ class Logger:
     def _format_time(cls):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
+    @lock
     def log(self, level, text):
         if level.weight >= self._output_level.weight:
             txt = self._format(self._format_time(), level, text)
             self._file.write(txt)
 
+    @lock
     def log_warn(self, level, text):
         if level.weight >= self._output_level.weight:
             txt = self._format(self._format_time(), level, text)
