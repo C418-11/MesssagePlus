@@ -43,6 +43,19 @@ class Address:
     def __call__(self, *args, **kwargs):
         return self.get()
 
+    def __eq__(self, other):
+        eq_ip = False
+        try:
+            eq_ip = self.ip == other.ip
+        except AttributeError:
+            pass
+        eq_port = False
+        try:
+            eq_port = self.port == other.port
+        except AttributeError:
+            pass
+        return eq_ip and eq_port
+
     def __hash__(self):
         return hash((self.ip, self.port))
 
@@ -228,6 +241,9 @@ class SocketIo:
 
     def getpeername(self):
         return Address(*self._cSocket.getpeername())
+
+    def fileno(self):
+        return self._cSocket.fileno()
 
 
 class Server:

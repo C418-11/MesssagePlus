@@ -4,13 +4,14 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+
 import sys
-import time
 import traceback
 from typing import Union
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
+from AuthenticationSystem.Events.Login import FAILED
 from Lib.SocketIO import SocketIo
 from Lib.config import tools as cf_tools
 from Lib.database import logging as db_logging
@@ -50,6 +51,9 @@ class LoginDatabaseFailedError(Exception):
         self.ret_code = ret_code
 
     def __str__(self):
+        if isinstance(self.ret_code, Exception):
+            self.ret_code = f"{type(self.ret_code).__name__}: {self.ret_code}"
+
         return f"Login Database Failed (ret_code={self.ret_code})"
 
 
@@ -60,7 +64,7 @@ if _DBConfig.BuiltinDatabase.enable:
         level = db_logging.level_list.GetWeightLevel(_DBConfig.BuiltinDatabase.log_level)
 
     input_file = cf_tools.init_files(_DBConfig.BuiltinDatabase.input_file, 'r')
-    log_file = cf_tools.init_files(_DBConfig.BuiltinDatabase.log_file, 'a', newlien='\n')
+    log_file = cf_tools.init_files(_DBConfig.BuiltinDatabase.log_file, 'a', newline='\n')
     s_db = DataBaseServer(
         name=_DBConfig.Server.name,
         file=input_file,
@@ -77,12 +81,22 @@ if _DBConfig.BuiltinDatabase.enable:
 
 
 def _init_db_client(login_logger, timeout, client_type):
-    client = DataBaseClient(_DB_ADDR)
-    old_timeout = client.gettimeout()
-    client.settimeout(timeout)
-
     log_head = f"[Login][DBClientLogin][{client_type}]"
 
+    try:
+        client = DataBaseClient(_DB_ADDR)
+    except OSError as err:
+        if err.errno == 10048:
+            login_logger.error(
+                f"{log_head} Failed to connect to database server #port exhausted?"
+                f" ({type(err).__name__}: {err})"
+            )
+            raise LoginDatabaseFailedError(err)
+        else:
+            raise
+
+    old_timeout = client.gettimeout()
+    client.settimeout(timeout)
     ret = client.recv()
 
     if ret != LOGIN.ASK_USER_AND_PASSWORD:
@@ -117,6 +131,7 @@ def _init_database():
     ]
 
     event_ls *= 9997
+    # warn 这玩意用完记得删
 
     if _DBConfig.AutoInit.init_store:
         for store in _DBStores:
@@ -154,7 +169,6 @@ def _init_database():
             )
         progress_bar.update(1)
         progress_bar.refresh()
-        # time.sleep(.0000)
 
     progress_bar.close()
 
@@ -190,11 +204,13 @@ class LoginMixin:
         if self.TYPE is None:
             self.TYPE = client_type
 
+        log_head = f"[Login][{self.TYPE}]"
+
         addr = self._cSocket.getpeername()
-        self.login_logger.debug(f"[Login][{self.TYPE}] Recv new login request (addr='{addr}')")
+        self.login_logger.debug(f"{log_head} Recv new login request (addr='{addr}')")
         old_timeout = self._cSocket.gettimeout()
         self._cSocket.settimeout(self.TIMEOUT)
-        self._cSocket.send(Login.ASK_DATA().to_str().encode("utf-8"))
+        self._cSocket.send_json(Login.ASK_DATA().dump())
 
         data = {}
         load_success = False
@@ -202,19 +218,42 @@ class LoginMixin:
             data = Login.ACK_DATA.load_str(self._cSocket.recv().decode())
             load_success = True
         except (ConnectionResetError, TimeoutError, EOFError) as err:
+            # 这些错误发生大概率是连接直接断了, 所以没必要发送LOGIN FAILED事件
             self.login_logger.info(
-                f"[Login][{self.TYPE}] Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
+                f"{log_head} Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
             )
         except Exception as err:
             self.login_logger.error(
-                f"[Login][{self.TYPE}] An un except exception recv (exc='{type(err.__name__)}: {err}')"
+                f"{log_head} An un except exception recv (exc='{type(err.__name__)}: {err}')"
             )
+            self._cSocket.send_json(Login.FAILED(FAILED.TYPE.INVALID_DATA).dump())
             traceback.print_exception(err, file=sys.stderr)
 
         if not load_success:
+            self._cSocket.close()
             raise LostConnectError
 
-        client = self._init_db_client()
+        try:
+            client = self._init_db_client()
+        except LoginDatabaseFailedError as err:
+            self.login_logger.error(
+                f"{log_head} Lost Connect! (reason='{type(err).__name__}: {err}')"
+            )
+            try:
+                self._cSocket.send_json(Login.FAILED(FAILED.TYPE.FAILED_TO_ACQUIRE_DATA).dump())
+            except ConnectionError:
+                pass
+            self._cSocket.close()
+            raise LostConnectError
+
+        except Exception as err:
+            self.login_logger.error(
+                f"{log_head} Lost Connect! Unhandled exception occurred (reason={type(err).__name__}：{err})"
+            )
+            self._cSocket.send_json(Login.FAILED(FAILED.TYPE.UNKNOWN_SERVER_ERROR).dump())
+            self._cSocket.close()
+            raise LostConnectError
+
         self._cSocket.settimeout(old_timeout)
 
         return data, client

@@ -11,16 +11,22 @@ from threading import Thread
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
+from AuthenticationSystem.Events.Login import FAILED
 from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
 from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
-from AuthenticationSystem.Serv.Mixin.Login import LoginMixin
+from AuthenticationSystem.Serv.Mixin.Login import LoginMixin, LostConnectError
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.database.DataBase import DataBaseClient
 from Lib.log import Logging
 from Lib.simple_tools import ThreadPool
+
+
+class LoginFailed(Exception):
+    def __str__(self):
+        return "Login Failed"
 
 
 class LoginManagerMixin(LoginMixin, ABC):
@@ -32,33 +38,48 @@ class LoginManagerMixin(LoginMixin, ABC):
     def logger(self) -> Logging.Logger:
         ...
 
-    def _stop(self, _addr):
+    def _stop(self, _addr, *, fail_reason=None):
+        if fail_reason is not None:
+            self._cSocket.send_json(Login.FAILED(fail_reason).dump())
         self.logger.debug(f"[{self.TYPE}] Stop (addr='{_addr}')")
         self._cSocket.close()
-        self.db_client.close()
+        try:
+            self.db_client.close()
+        except AttributeError:
+            pass
         self.logger.error(f"[{self.TYPE}] Exit")
         sys.exit(1)
 
     def _login_all(self, _addr):
         self.logger.debug(f"[{self.TYPE}] Start (addr='{_addr}')")
 
-        raw_user_data, db_client = super()._login()
+        try:
+            raw_user_data, db_client = super()._login()
+        except LostConnectError:
+            self.login_logger.debug(f"[{self.TYPE}] LostConnectError (addr='{_addr}')")
+            self._stop(_addr)
+            raise LoginFailed
         self.db_client = db_client
         user_data = raw_user_data.dump().values()
         user_data = list(user_data)[0]
 
         if user_data["client_type"] != self.TYPE:
             repr_ = f"(addr='{_addr}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
-            self.logger.error(
+            self.logger.warn(
                 f"[{self.TYPE}] Invalid client type {repr_}"
             )
             self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
-            self._stop(_addr)
+            self._stop(_addr, fail_reason=FAILED.TYPE.INVALID_CLIENT_TYPE)
+            raise LoginFailed
 
-        self._cSocket.send_json(Login.SUCCESS().dump())
+        try:
+            self._cSocket.send_json(Login.SUCCESS().dump())
+        except ConnectionError:
+            self.logger.debug(f"[{self.TYPE}] Lost Connect! #just before i told it login success (addr='{_addr}')")
         self.logger.debug(f"[{self.TYPE}] Login Success (addr='{_addr}' user_data='{user_data}')")
 
         self._stop(_addr)
+        raise LoginFailed
 
 
 @ServiceTypeRegistry
@@ -71,7 +92,10 @@ class Client(ABCService, LoginManagerMixin):
         super().__init__(conn, addr)
 
     def start(self):
-        self._login_all(self._address)
+        try:
+            self._login_all(self._address)
+        except LoginFailed:
+            pass
 
 
 @ServiceTypeRegistry

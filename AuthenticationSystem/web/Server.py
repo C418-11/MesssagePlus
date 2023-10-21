@@ -44,7 +44,7 @@ class Server(SocketServer):
             addr = Address(*addr)
             self.logger.info(f"[ServManager] Recv Connect (addr={addr})")
 
-            uuid = hash((SocketIo, Address))
+            uuid = hash((conn, addr))
             classify_thread = Thread(target=self._serv_classify, args=[conn, addr, uuid],
                                      daemon=True,
                                      name="Server.ClassifyThread")
@@ -54,7 +54,12 @@ class Server(SocketServer):
     def _serv_classify(self, conn: SocketIo, addr: Address, uuid):
         conn_timeout = conn.gettimeout()
         conn.settimeout(10)
-        byte_data = conn.recv(4096)
+        try:
+            byte_data = conn.recv()
+        except ConnectionError:
+            self.logger.warn(f"[ServManager] Lost connect! #during wait client type (addr={addr})")
+            conn.close()
+            sys.exit()
         conn.settimeout(conn_timeout)
 
         byte_data: bytes
@@ -63,7 +68,10 @@ class Server(SocketServer):
 
         ServicePoolTypes[data["type"]].add_service(conn, addr, data)
 
-        self._classifying_serv_pool.remove(uuid)
+        try:  # 这玩意里面是弱引用字典，找不到是正常的
+            self._classifying_serv_pool.remove(uuid)
+        except KeyError:
+            pass
         sys.exit(0)
 
     def start(self):

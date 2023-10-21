@@ -97,4 +97,36 @@ class _LoginSuccess(Event, SuccessEvent):
 SUCCESS = _LoginSuccess
 
 
-__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE", "SUCCESS")
+class _LoginFailed(EventWithData, FailEvent):
+    Name = "Login.LOGIN_FAILED"
+
+    class TYPE:
+        UNKNOWN_SERVER_ERROR = -1
+        NOTSET = 0
+        INVALID_CLIENT_TYPE = 1
+        LOGIN_TIMEOUT = 2
+        FAILED_TO_ACQUIRE_DATA = 3
+        INVALID_DATA = 4
+
+    def __init__(self, info=TYPE.NOTSET):
+        self._info = info
+
+    @property
+    def info(self):
+        return self._info
+
+    @classmethod
+    def load(cls, _json):
+        return cls(**_json[cls.Name])
+
+    def dump(self):
+        return {
+            self.Name: {
+                "info": self._info,
+            }
+        }
+
+
+FAILED = _LoginFailed
+
+__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE", "SUCCESS", "FAILED")

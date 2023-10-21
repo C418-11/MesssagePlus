@@ -3,4 +3,4 @@ venv312
 venv
 .idea
 .git
-编译pyd用的
+build_pyd
