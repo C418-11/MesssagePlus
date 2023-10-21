@@ -98,5 +98,6 @@ DEBUG = Level("DEBUG", 0)
 INFO = Level("INFO", 1)
 WARN = Level("WARN", 2)
 ERROR = Level("ERROR", 3)
+NEVER = Level("NEVER", float("inf"))
 
 __all__ = ("default_level_list", "LevelList", "Level", *default_level_list.levels())

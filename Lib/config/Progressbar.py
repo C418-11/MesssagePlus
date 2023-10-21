@@ -10,7 +10,7 @@ TOTAL_CONFIG_FILE = 0
 
 ProgressBar = tqdm(
         total=-1,
-        leave=False,
+        leave=True,
         unit="file",
         desc="ConfigFiles",
         file=sys.stdout,
@@ -24,6 +24,11 @@ def update(n=1, refresh=True):
     ProgressBar.update(n)
     if refresh:
         ProgressBar.refresh()
+
+
+def close():
+    # warn 记得close这玩意!!!!!!!!!!!!!!!!!!!!!
+    ProgressBar.close()
 
 
 def config_counter(__cls=None, *, count: int = None):

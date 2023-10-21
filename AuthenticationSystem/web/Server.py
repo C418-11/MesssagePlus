@@ -88,7 +88,7 @@ class Server(SocketServer):
         ...
 
 
-def main():
+def example():
     s = Server()
     s.bind(Address("127.0.0.1", 32767))
     s.listen(500)
@@ -99,4 +99,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    example()

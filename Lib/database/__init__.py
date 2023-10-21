@@ -28,12 +28,10 @@ class __NotSet:
         return "NotSet"
 
 
-__RUN_VERSION = (3, 10, __NotSet())
+__RUN_VERSION = (3, 11, __NotSet())
 ver_info = sys.version_info.major, sys.version_info.minor, sys.version_info.micro
 if ver_info < __RUN_VERSION:
     raise ImportError("Python version Error (at lease {0} now {1})".format(__RUN_VERSION, ver_info))
-
-print(f"DataBase {__version__}")
 
 __all__ = ("ABC", "DataBase", "Event", "logging", "SocketIO")
 

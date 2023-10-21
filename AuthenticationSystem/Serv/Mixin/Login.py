@@ -5,6 +5,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import sys
+import time
 import traceback
 from typing import Union
 
@@ -19,7 +20,10 @@ from Lib.database.DataBase import DataBaseServer
 from Lib.database.Event import *
 from Lib.database.Event.ABC import RunSuccess
 from Lib.database.SocketIO import Address as db_Address
+from Lib.global_thread_lock import OutputLock
 from Lib.log import Logging
+from Lib.config import Progressbar
+from tqdm import tqdm
 
 _DBConfig = ServerConfig.Login.DB
 _DB_ADDR = db_Address(*_DBConfig.Server.address)
@@ -105,10 +109,14 @@ def _init_db_client(login_logger, timeout, client_type):
 
 def _init_database():
     c_db = _init_db_client(_login_logger, _Config.timeout, "InitDatabase")
+    log_head = f"[Login][DBServer-AutoInit]"
 
     event_ls = [
+        LOGIN.ACK_USER_AND_PASSWORD(_DBConfig.Userdata.username, _DBConfig.Userdata.password),
         DATABASE.INIT("default", _DBName),
     ]
+
+    event_ls *= 9997
 
     if _DBConfig.AutoInit.init_store:
         for store in _DBStores:
@@ -119,21 +127,41 @@ def _init_database():
             ]
             event_ls += temp
 
+    c_db.settimeout(_Config.timeout)
+
+    progress_bar = tqdm(
+        total=len(event_ls),
+        leave=True,
+        unit="events",
+        desc="DBServer-AutoInit",
+        file=sys.stdout,
+    )
+
+    progress_bar.set_lock(OutputLock)
+
     for event in event_ls:
-        _login_logger.info(f"[InitDatabase] Send event to DBServer (event='{event}')")
+        _login_logger.debug(f"{log_head} Send event to DBServer (event='{event}')")
         ret = c_db.send_request(event)
-        _login_logger.debug(f"[InitDatabase] Recv return value from DBServer (ret='{ret}')")
+        _login_logger.debug(f"{log_head} Recv return value from DBServer (ret='{ret}')")
         if not isinstance(ret, RunSuccess):
             _login_logger.warn(
-                "[InitDatabase] Return value is not instance of RUN_SUCCESS #may failed "
+                f"{log_head} Return value is not instance of RUN_SUCCESS #may failed "
                 f"(ret='{repr(ret)}')"
             )
         else:
-            _login_logger.info(
-                f"[InitDatabase] Successfully execute event (ret='{ret}')"
+            _login_logger.debug(
+                f"{log_head} Successfully execute event (ret='{ret}')"
             )
+        progress_bar.update(1)
+        progress_bar.refresh()
+        # time.sleep(.0000)
+
+    progress_bar.close()
 
     c_db.close()
+
+
+Progressbar.close()
 
 
 if _DBConfig.AutoInit.init_database:

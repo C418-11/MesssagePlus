@@ -47,7 +47,7 @@ logger_args: dict
 @config_counter(count=1)
 class _LoadBaseLoggerConfig(BaseIO):
     DefaultConfig = {
-        "output_level": Level.DEBUG.level,
+        "output_level": Level.NEVER.level,
         "file": "stdout",
         "warn_file": "stderr"
     }

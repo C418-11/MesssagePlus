@@ -17,9 +17,9 @@ def main():
     type_ = input("1: Server, 2.Client, 3: Exit\n")
     match int(type_):
         case 1:
-            import_from("AuthenticationSystem.web.Server", "main")()
+            import_from("AuthenticationSystem.web.Server", "example")()
         case 2:
-            import_from("AuthenticationSystem.web.Client", "main")()
+            import_from("AuthenticationSystem.web.Client", "example")()
         case 3:
             exit()
         case _:

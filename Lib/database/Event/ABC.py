@@ -82,15 +82,20 @@ def GetUsers(server: ABCServer) -> Union[dict, str]:
     :param server: 数据库服务器
     :return: 用户注册表对象
     """
-
+    file = None
+    users = None
     try:
-        users = json.load(open(server.path + server.USERDATA_FILE, encoding='utf-8', mode='r'))  # 加载用户名单
-        return users
+        file = open(server.path + server.USERDATA_FILE, encoding='utf-8', mode='r')
+        users = json.load(file)  # 加载用户名单
     except FileNotFoundError:
         WriteJson(server=server, arg={"default": {"password": "default"}}, file_name=server.USERDATA_FILE)
 
-        users = json.load(open(server.path + server.USERDATA_FILE, encoding='utf-8', mode='r'))  # 加载用户名单
-        return users
+        file = open(server.path + server.USERDATA_FILE, encoding='utf-8', mode='r')
+        users = json.load(file)  # 加载用户名单
+    finally:
+        if file:
+            file.close()
+            return users
 
 
 __EventToFunc = {}

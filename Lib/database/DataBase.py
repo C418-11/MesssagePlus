@@ -120,7 +120,7 @@ class DataBase(ABCDataBase):
         self.time_format = time_format
         self.log_format = log_format
 
-        self.logging = logging.Logger(name=self.name, stream=open(self.log_path, f"{log_mode}b"))
+        self.logging = logging.Logger(name=self._name, stream=open(self.log_path, f"{log_mode}b"))
         self.logging.type = bytes
         self.logging: logging.Logger
         self.store = {"default": Store}

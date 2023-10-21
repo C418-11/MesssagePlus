@@ -75,9 +75,9 @@ class _DataBaseInjection:
                     },
                     "BuiltinDatabase": {
                         "enable": True,
-                        "log_file": "stdout",
+                        "log_file": "stderr",
                         "input_file": None,
-                        "disable_log": False,
+                        "disable_log": True,
                         "log_level": db_logging.NOTSET.name,
                         "debug_mode": True,
                         "max_connections": 10,

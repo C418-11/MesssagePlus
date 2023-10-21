@@ -114,16 +114,20 @@ class ABCStore(ABC):
         self.histories.append(history)
 
     @abstractmethod
-    def set_format(self, format_: NameList) -> None: ...
+    def set_format(self, format_: NameList) -> None:
+        ...
 
     @abstractmethod
-    def append(self, line: NameList) -> None: ...
+    def append(self, line: NameList) -> None:
+        ...
 
     @abstractmethod
-    def search(self, keyword: Union[str, tuple[str]], value) -> list[NameList]: ...
+    def search(self, keyword: Union[str, tuple[str]], value) -> list[NameList]:
+        ...
 
     @abstractmethod
-    def locate(self, line: NameList) -> int: ...
+    def locate(self, line: NameList) -> int:
+        ...
 
     def set_history_format(self, format_: str = "[{time_}]({type_}): {value}") -> None:
         self.database.BinJsonChanger(self.path + self.database.INFO_FILE, ("history_format",), format_)
@@ -161,13 +165,17 @@ class ABCDataBase(ABC):
     HISTORY_FILE = "HISTORY.BinHistory"
     LOG_File = "Log.BinLog"
 
-    name: str
+    _name: str
     path: str
     stores: set[ABCStore]
     store: dict[str, Type[ABCStore]]
 
     def __init__(self, __name: str, __path: str) -> None:
-        self.name = __name
+        self._name = __name
+
+    @property
+    def name(self):
+        return self._name
 
     def store_path(self, __store_name: str):
         return f"{self.path}{__store_name}\\"
@@ -177,25 +185,29 @@ class ABCDataBase(ABC):
 
         paths = set()
         for dir_ in dirs:
-            try:
-                path = self.store_path(dir_)
-                open(path + self.INFO_FILE, mode='rb').close()
-                paths.add(path)
-            except FileNotFoundError:
-                pass
+            path = self.store_path(dir_)
+            if not os.access(path + self.INFO_FILE, os.R_OK):
+                continue
+            paths.add(path)
         return paths
 
     @abstractmethod
-    def create(self, __store_type, __store_name: str) -> None: ...
+    def create(self, __store_type, __store_name: str) -> None:
+        ...
 
     @abstractmethod
-    def log(self, msg: str, operator: str) -> None: ...
+    def log(self, msg: str, operator: str) -> None:
+        ...
 
     @staticmethod
     def BinJsonReader(__file_path: str):
         txt = ""
         with open(__file_path, mode="rb") as file:
-            txt += file.read(1024*4).decode("utf-8")
+            while True:
+                data = file.read(1024 * 4).decode("utf-8")
+                if not data:
+                    break
+                txt += data
         data = json.loads(txt)
         return data
 
@@ -236,7 +248,14 @@ class ABCDataBase(ABC):
         return string.encode("utf-8", "unicode_escape").replace(b'\xc2', b'')
 
     @abstractmethod
-    def __getitem__(self, item) -> ABCStore: ...
+    def __getitem__(self, item) -> ABCStore:
+        ...
+
+    def __eq__(self, other):
+        return self._name == other
+
+    def __hash__(self):
+        return hash(self._name)
 
 
 class ABCServer(ABC):
