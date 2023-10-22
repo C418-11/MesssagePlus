@@ -100,7 +100,7 @@ def _init_db_client(login_logger, timeout, client_type):
     ret = client.recv()
 
     if ret != LOGIN.ASK_USER_AND_PASSWORD:
-        login_logger.error(
+        login_logger.warn(
             f"{log_head} Received an unexpected event request before logging in (event='{type(ret).raw}: {ret}')"
         )
 
@@ -223,7 +223,7 @@ class LoginMixin:
                 f"{log_head} Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
             )
         except Exception as err:
-            self.login_logger.error(
+            self.login_logger.warn(
                 f"{log_head} An un except exception recv (exc='{type(err.__name__)}: {err}')"
             )
             self._cSocket.send_json(Login.FAILED(FAILED.TYPE.INVALID_DATA).dump())
@@ -236,7 +236,7 @@ class LoginMixin:
         try:
             client = self._init_db_client()
         except LoginDatabaseFailedError as err:
-            self.login_logger.error(
+            self.login_logger.warn(
                 f"{log_head} Lost Connect! (reason='{type(err).__name__}: {err}')"
             )
             try:
