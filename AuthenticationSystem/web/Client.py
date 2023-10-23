@@ -3,7 +3,6 @@
 
 
 import socket
-import time
 from typing import Union
 
 from AuthenticationSystem.Events.Login import *
@@ -42,7 +41,6 @@ def _main_():
         try:
             c.recv()
         except (TimeoutError, ConnectionError, EOFError):
-            time.sleep(0.001)
             break
     c.close()
 
@@ -55,7 +53,7 @@ def example():
         desc="Loop",
     )
 
-    loop_times = 100000
+    loop_times = 10000
 
     t.reset(loop_times)
 

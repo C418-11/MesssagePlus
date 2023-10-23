@@ -5,6 +5,7 @@
 import json
 import socket
 import sys
+import cProfile
 from numbers import Real
 from threading import Thread
 from typing import Union, Any
@@ -68,7 +69,7 @@ class Server(SocketServer):
 
         ServicePoolTypes[data["type"]].add_service(conn, addr, data)
 
-        try:  # 这玩意里面是弱引用字典，找不到是正常的
+        try:  # 这玩意里面是弱引用字典，找不到 是正常的
             self._classifying_serv_pool.remove(uuid)
         except KeyError:
             pass
@@ -107,4 +108,4 @@ def example():
 
 
 if __name__ == "__main__":
-    example()
+    cProfile.run("example()", sort="tottime")

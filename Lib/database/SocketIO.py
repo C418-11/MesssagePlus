@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
+import json
 import pickle
 import socket
 import struct
@@ -42,6 +43,19 @@ class Address:
     def __call__(self, *args, **kwargs):
         return self.get()
 
+    def __eq__(self, other):
+        eq_ip = False
+        try:
+            eq_ip = self.ip == other.ip
+        except AttributeError:
+            pass
+        eq_port = False
+        try:
+            eq_port = self.port == other.port
+        except AttributeError:
+            pass
+        return eq_ip and eq_port
+
     def __hash__(self):
         return hash((self.ip, self.port))
 
@@ -62,30 +76,24 @@ class Recv:
     def get(self, timeout: Union[Real, None] = float("inf")):
         start_time = time.time()
 
-        try:
-            return self.data.popleft()
-        except IndexError:
-            if timeout is None:
-                raise
-
         timeout = float(timeout)
 
-        delay = 0.5
+        delay = 0
 
         remainder_time = time.time() - start_time
 
-        while remainder_time <= timeout:
+        while remainder_time < timeout:
             if delay > remainder_time:
                 delay = remainder_time
-            elif delay > 1:
-                delay = 1
+            elif delay > 0.5:
+                delay = 0.5
 
-            try:
+            if self.data:
                 return self.data.popleft()
-            except IndexError:
-                time.sleep(delay)
 
-            delay += 0.01
+            time.sleep(delay)
+
+            delay += 0.00001
             remainder_time = time.time() - start_time
         raise TimeoutError("Timeout waiting for return value")
 
@@ -118,7 +126,7 @@ class Recv:
 
 
 class SocketIo:
-    def __init__(self, address: Union[Address, socket.socket], print_error: bool = True):
+    def __init__(self, address: Union[Address, socket.socket], print_error: bool = False):
 
         """
         :param address: 绑定到的套接字
@@ -166,10 +174,9 @@ class SocketIo:
     def _recv_loop(self):
         while self._running:
             try:
+                self._cSocket.setblocking(False)
                 byte = self._recv_all()
                 self._recv_queue.put(byte)
-            except ValueError:
-                time.sleep(0.05)
             except Exception as err:
                 self._cSocket.close()
                 if self._print_error:
@@ -177,6 +184,15 @@ class SocketIo:
                     break
                 else:
                     raise
+
+            try:
+                # 尝试读取数据，如果读取失败，说明没有新数据到达
+                # 使用非阻塞socket，如果读取失败，会立即返回错误，不会占用CPU资源
+                self._cSocket.setblocking(True)
+                byte = self._recv_all()
+                self._recv_queue.put(byte)
+            except (ConnectionError, EOFError):
+                pass
 
         self._running = False
 
@@ -197,12 +213,19 @@ class SocketIo:
         return pickle.loads(self.recv(max_size=max_size))
 
     def get_que(self):
+        if self._recv_t.is_alive():
+            raise threading.ThreadError("Recv Thread is not alive")
         return self._recv_queue
 
     def send(self, byte: bytes):
         size_of = byte.__sizeof__()
         self._cSocket.sendall(struct.pack('i', size_of))
         self._cSocket.sendall(byte)
+
+    def send_json(self, _json: Union[list, tuple, str, dict, set, bool, None], encode="utf-8"):
+        txt = json.dumps(_json)
+        byte = txt.encode(encode)
+        self.send(byte)
 
     def send_obj(self, obj):
         byte = pickle.dumps(obj)
@@ -222,6 +245,9 @@ class SocketIo:
 
     def getpeername(self):
         return Address(*self._cSocket.getpeername())
+
+    def fileno(self):
+        return self._cSocket.fileno()
 
 
 class Server:
