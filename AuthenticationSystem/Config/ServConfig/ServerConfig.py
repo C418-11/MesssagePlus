@@ -9,8 +9,8 @@ from typing import Union
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
-from Lib.database import logging as db_logging
 from Lib.config.Progressbar import config_counter
+from Lib.database import logging as db_logging
 
 
 class Data:

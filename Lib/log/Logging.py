@@ -4,8 +4,8 @@
 import sys
 from datetime import datetime
 
-from Lib.log import Level
 from Lib.global_thread_lock import ProcessLock
+from Lib.log import Level
 
 
 class Logger:

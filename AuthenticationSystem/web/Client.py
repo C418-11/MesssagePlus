@@ -5,11 +5,12 @@
 import socket
 from typing import Union
 
+from tqdm import tqdm
+
 from AuthenticationSystem.Events.Login import *
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.simple_tools import Disable
-from tqdm import tqdm
 
 
 class Client(SocketIo):

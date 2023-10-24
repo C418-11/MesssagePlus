@@ -2,10 +2,10 @@
 # cython: language_level = 3
 
 
+import cProfile
 import json
 import socket
 import sys
-import cProfile
 from numbers import Real
 from threading import Thread
 from typing import Union, Any

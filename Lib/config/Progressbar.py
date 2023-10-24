@@ -3,8 +3,8 @@
 import sys
 
 from tqdm import tqdm
-from Lib.global_thread_lock import OutputLock
 
+from Lib.global_thread_lock import OutputLock
 
 TOTAL_CONFIG_FILE = 0
 

@@ -9,10 +9,13 @@ import sys
 import traceback
 from typing import Union
 
+from tqdm import tqdm
+
 from AuthenticationSystem.Config.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Events.Login import FAILED
 from Lib.SocketIO import SocketIo
+from Lib.config import Progressbar
 from Lib.config import tools as cf_tools
 from Lib.database import logging as db_logging
 from Lib.database.ABC import NameList
@@ -23,8 +26,6 @@ from Lib.database.Event.ABC import RunSuccess
 from Lib.database.SocketIO import Address as db_Address
 from Lib.global_thread_lock import OutputLock
 from Lib.log import Logging
-from Lib.config import Progressbar
-from tqdm import tqdm
 
 _DBConfig = ServerConfig.Login.DB
 _DB_ADDR = db_Address(*_DBConfig.Server.address)
@@ -109,7 +110,7 @@ def _init_db_client(login_logger, timeout, client_type):
     client.settimeout(old_timeout)
 
     if ret == LOGIN.LOGIN_SUCCESS:
-        login_logger.info(f"{log_head} Login Success")
+        login_logger.debug(f"{log_head} Login Success")
         return client
     elif ret == LOGIN.WRONG_PASSWORD:
         login_logger.error(f"{log_head} Wrong DB password (pw='{_DBConfig.password}')")

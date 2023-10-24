@@ -51,8 +51,6 @@ class LoginManagerMixin(LoginMixin, ABC):
         sys.exit(1)
 
     def _login_all(self, _addr):
-        self.logger.debug(f"[{self.TYPE}] Start (addr='{_addr}')")
-
         try:
             raw_user_data, db_client = super()._login()
         except LostConnectError:
@@ -68,7 +66,6 @@ class LoginManagerMixin(LoginMixin, ABC):
             self.logger.warn(
                 f"[{self.TYPE}] Invalid client type {repr_}"
             )
-            self._cSocket.send_json(Login.INVALID_CLIENT_TYPE(user_data["client_type"], self.TYPE).dump())
             self._stop(_addr, fail_reason=FAILED.TYPE.INVALID_CLIENT_TYPE)
             raise LoginFailed
 
@@ -92,6 +89,7 @@ class Client(ABCService, LoginManagerMixin):
         super().__init__(conn, addr)
 
     def start(self):
+        self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
         try:
             self._login_all(self._address)
         except LoginFailed:

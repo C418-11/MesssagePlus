@@ -2,9 +2,9 @@
 # cython: language_level = 3
 
 import os
+import re
 import subprocess
 from typing import Union
-import re
 
 from Cython.Build import cythonize
 from setuptools import find_packages
