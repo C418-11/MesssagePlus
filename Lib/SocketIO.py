@@ -93,7 +93,7 @@ class Recv:
 
             time.sleep(delay)
 
-            delay += 0.00001
+            delay += 0.000001
             remainder_time = time.time() - start_time
         raise TimeoutError("Timeout waiting for return value")
 

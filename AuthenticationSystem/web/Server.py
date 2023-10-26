@@ -2,7 +2,6 @@
 # cython: language_level = 3
 
 
-import cProfile
 import json
 import socket
 import sys
@@ -35,9 +34,10 @@ class Server(SocketServer):
         return super().get(timeout=timeout)
 
     def _serv_manager(self):
+        self.logger.debug("[ServManager] Enter Loop thread")
         while self._running:
             try:
-                conn, addr = self._get(10)
+                conn, addr = self._get(1)
             except TimeoutError:
                 continue
 
@@ -51,6 +51,7 @@ class Server(SocketServer):
                                      name="Server.ClassifyThread")
             self._classifying_serv_pool.add(classify_thread, uuid=uuid)
             classify_thread.start()
+        self.logger.debug("[ServManager] Exit Loop thread!")
 
     def _serv_classify(self, conn: SocketIo, addr: Address, uuid):
         conn_timeout = conn.gettimeout()
@@ -88,6 +89,19 @@ class Server(SocketServer):
         self.logger.debug(f"[Server] Listen (backlog={_backlog})")
         super().listen(_backlog)
 
+    def stop(self):
+        self.logger.info("[Server] Stop!")
+        self._running = False
+        super().stop()
+
+    def join(self, timeout=None):
+        self._serv_manager_thread.join(timeout)
+        super().join(timeout)
+
+    def restart(self, init_socket: Union[tuple, socket.socket]):
+        """banned func, i don't think it's necessary to restart server"""
+        raise AttributeError("Server can not restart!")
+
     @Disable
     def get(*args, **kwargs):
         ...
@@ -97,15 +111,4 @@ class Server(SocketServer):
         ...
 
 
-def example():
-    s = Server()
-    s.bind(Address("127.0.0.1", 32767))
-    s.listen(500)
-    s.start()
-    while input("STOP? (T/F)\n\r") != 'T':
-        pass
-    s.stop()
-
-
-if __name__ == "__main__":
-    cProfile.run("example()", sort="tottime")
+__all__ = ("Server", )

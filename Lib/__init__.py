@@ -7,10 +7,3 @@ __version__ = "0.1"
 
 from . import StdColor
 
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()

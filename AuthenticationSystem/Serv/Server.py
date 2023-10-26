@@ -16,7 +16,7 @@ from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
 from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
-from AuthenticationSystem.Serv.Mixin.Login import LoginMixin, LostConnectError
+from AuthenticationSystem.Serv.Login.Login import Login, LostConnectError
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.database.DataBase import DataBaseClient
@@ -29,9 +29,11 @@ class LoginFailed(Exception):
         return "Login Failed"
 
 
-class LoginManagerMixin(LoginMixin, ABC):
+class LoginManagerMixin(Login, ABC):
 
     db_client: DataBaseClient
+    user_data: dict
+    _cSocket: SocketIo
 
     @property
     @abstractmethod
@@ -50,9 +52,9 @@ class LoginManagerMixin(LoginMixin, ABC):
         self.logger.error(f"[{self.TYPE}] Exit")
         sys.exit(1)
 
-    def _login_all(self, _addr):
+    def get_data(self, _addr):
         try:
-            raw_user_data, db_client = super()._login()
+            raw_user_data, db_client = super()._get_data()
         except LostConnectError:
             self.login_logger.debug(f"[{self.TYPE}] LostConnectError (addr='{_addr}')")
             self._stop(_addr)
@@ -73,10 +75,19 @@ class LoginManagerMixin(LoginMixin, ABC):
             self._cSocket.send_json(Login.SUCCESS().dump())
         except ConnectionError:
             self.logger.debug(f"[{self.TYPE}] Lost Connect! #just before i told it login success (addr='{_addr}')")
-        self.logger.debug(f"[{self.TYPE}] Login Success (addr='{_addr}' user_data='{user_data}')")
+            self._stop(_addr)
+            raise LoginFailed
 
-        self._stop(_addr)
-        raise LoginFailed
+        self.user_data = user_data
+
+    def login(self, addr):
+        self.get_data(addr)
+
+        self._find_user_in_db(...)  # todo
+        # warn todo
+        # 从数据库中查找是否有登录数据
+        # 如果查找到并且匹配就直接登录
+        # 如果没有找到就尝试注册
 
 
 @ServiceTypeRegistry
@@ -91,7 +102,7 @@ class Client(ABCService, LoginManagerMixin):
     def start(self):
         self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
         try:
-            self._login_all(self._address)
+            self.login(self._address)
         except LoginFailed:
             pass
 
@@ -106,7 +117,7 @@ class ChatServer(ABCService, LoginManagerMixin):
         super().__init__(conn, addr)
 
     def start(self):
-        self._login_all(self._address)
+        ...
 
 
 @PoolTypeRegistry

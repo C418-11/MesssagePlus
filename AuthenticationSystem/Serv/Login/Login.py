@@ -131,9 +131,6 @@ def _init_database():
         DATABASE.INIT("default", _DBName),
     ]
 
-    event_ls *= 9997
-    # warn 这玩意用完记得删
-
     if _DBConfig.AutoInit.init_store:
         for store in _DBStores:
             temp = [
@@ -188,7 +185,7 @@ class LostConnectError(ConnectionError):
         return "Lost connect"
 
 
-class LoginMixin:
+class Login:
     _cSocket: SocketIo
 
     _login_Config = _Config
@@ -199,11 +196,7 @@ class LoginMixin:
     def _init_db_client(self):
         return _init_db_client(self.login_logger, self.TIMEOUT, self.TYPE)
 
-    def _login(self, client_type=None) -> tuple[Login.ACK_DATA, DataBaseClient]:
-        if (client_type is None) and (self.TYPE is None):
-            raise ValueError("client_type is None")
-        if self.TYPE is None:
-            self.TYPE = client_type
+    def _get_data(self) -> tuple[Login.ACK_DATA, DataBaseClient]:
 
         log_head = f"[Login][{self.TYPE}]"
 
@@ -258,3 +251,11 @@ class LoginMixin:
         self._cSocket.settimeout(old_timeout)
 
         return data, client
+
+    def _find_user_in_db(self, uuid):
+        # todo
+        ...
+
+
+
+__all__ = ("LoginData", "LoginDatabaseFailedError", "LostConnectError", "Login")
