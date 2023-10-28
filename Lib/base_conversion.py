@@ -5,10 +5,9 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import functools
-import time
 from itertools import zip_longest
 from typing import Union
-
+from typing import Self
 
 MAX_LEN = 30
 DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
@@ -26,25 +25,27 @@ def check_value(base=None, type_="self", index=0):
                 cls = type(self)
                 cls: type[Base]
 
-                args = list(args)
                 value = args[index]
 
                 if base is None:
-                    base = cls._BASE
+                    base = self._BASE
 
                 if isinstance(value, cls):
+                    if value.base != self.base:
+                        raise ValueError(f"self.base is not eq value.base (self={self.base}, value={value.base})")
                     return func(self, *args, **kwargs)
 
                 elif any([isinstance(value, x) for x in (float, int)]):
-                    value = cls.from_float(value, base)
+                    value = cls.from_int(value, base)
                 elif isinstance(value, str):
                     value = cls(value, base)
                 else:
                     return NotImplemented
 
-                args[index] = value
+                args_ls = list(args)
+                args_ls[index] = value
 
-                return func(self, *args, **kwargs)
+                return func(self, *args_ls, **kwargs)
 
             return decoder_self
 
@@ -52,9 +53,16 @@ def check_value(base=None, type_="self", index=0):
 
 
 class Base:
-    _BASE = BASE
+    """
+    N 进制的数值 (大小写忽略)
+    """
+
     _DIGITS = DIGITS
     _MAX_LEN = MAX_LEN
+
+    _BASE: int
+    _DIGITS: str
+    _MAX_LEN: int
 
     def __init__(self, value: Union[str, "Base"], base: int):
         if isinstance(value, type(self)):
@@ -62,7 +70,8 @@ class Base:
 
         if value == '' or value is None:
             value = self._DIGITS[0]
-        if value != '0' and any([value.startswith(x) for x in (f"-{self._DIGITS[0]}", self._DIGITS[0])]):
+        if (value != self._DIGITS[0] and
+                any([value.startswith(x) for x in (f"-{self._DIGITS[0]}", self._DIGITS[0])])):
             raise ValueError(f"The value can't start with {self._DIGITS[0]} or -{self._DIGITS[0]}")
         if value == '-':
             raise ValueError("Unable to convert a negative number just have '-'")
@@ -76,8 +85,12 @@ class Base:
 
         self._BASE = base
 
+    @property
+    def base(self) -> int:
+        return self._BASE
+
     @classmethod
-    def from_float(cls, n, base):
+    def from_int(cls, n: int, base) -> Self:
         if n == 0:
             return cls(cls._DIGITS[0], base)
         if n < 0:
@@ -93,23 +106,22 @@ class Base:
         return cls(s, base)
 
     @classmethod
-    def from_dec_ls(cls, dec_ls: list[int], to: int):
+    def from_index_ls(cls, index_ls: list[int], to: int) -> Self:
         txt = []
-        for dec in dec_ls:
-            if dec == '-':
+        for i in index_ls:
+            if i == '-':
                 txt += '-'
                 continue
-            dec_obj = cls(str(dec), 10)
-            txt += str(cls.dec_to(dec_obj, to))
+            txt += cls._DIGITS[int(i)]
         return cls(''.join(reversed(txt)), to)
 
     @classmethod
-    def dec_to(cls, n: "Base", to):
-        if n._BASE != 10:
+    def dec_to(cls, n: "Base", to: int) -> Self:
+        if n.base != 10:
             raise ValueError(f"n's base is not 10")
 
-        to = cls.from_float(to, 10)
-        if to == cls("10", 10):
+        to = cls.from_int(to, 10)
+        if to == cls.from_int(10, 10):
             return n
 
         result = ""
@@ -118,13 +130,13 @@ class Base:
             n = n // to
         return cls(result,  int(to))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._value)
 
     def __getitem__(self, item):
         return type(self)(self._value[item], self._BASE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._value
 
     def __iter__(self):
@@ -148,7 +160,7 @@ class Base:
         else:
             return type(self)(value, self._BASE)
 
-    def __int__(self):
+    def __int__(self) -> int:
         n = 0
 
         neg = False
@@ -186,7 +198,7 @@ class Base:
 
         result = []
         carry = 0
-        for a, b in zip_longest(reversed(x), reversed(y), fillvalue=0):
+        for a, b in zip_longest(reversed(x), reversed(y), fillvalue=self._DIGITS[0]):
             sum_ = int(cls(str(a), self._BASE)) + int(cls(str(b), self._BASE)) + carry
             result.append(sum_ % self._BASE)
             carry = sum_ // self._BASE
@@ -194,19 +206,18 @@ class Base:
             result.append(carry)
         if negative:
             result.append('-')
-
-        return type(self).from_dec_ls(result, self._BASE)
+        return type(self).from_index_ls(result, self._BASE)
 
     @check_value()
     def __sub__(self, other):
         cls = type(self)
         if self == other:
-            return cls('0', self._BASE)
+            return self.from_int(0, self._BASE)
 
-        if other == cls('0', self._BASE):
+        if other == self.from_int(0, self._BASE):
             return self
 
-        if self == cls('0', self._BASE):
+        if self == self.from_int(0, self._BASE):
             return -other
 
         result = []
@@ -227,7 +238,7 @@ class Base:
 
         carry = 0
 
-        for i, (a, b) in enumerate(zip_longest(reversed(x), reversed(y), fillvalue=0)):
+        for i, (a, b) in enumerate(zip_longest(reversed(x), reversed(y), fillvalue=self._DIGITS[0])):
             diff = int(cls(str(a), self._BASE)) - int(cls(str(b), self._BASE)) - carry
             carry = 0
             if diff < 0:
@@ -246,27 +257,27 @@ class Base:
 
         if negative and (result != [0]):
             result.append('-')
-        return type(self).from_dec_ls(result, self._BASE)
+
+        return type(self).from_index_ls(result, self._BASE)
 
     @check_value()
     def __mul__(self, other):
-        cls = type(self)
-        i = cls(other, self._BASE)
-        sum_ = cls('0', self._BASE)
+        i = type(self)(other, self._BASE)
+        sum_ = self.from_int(0, self._BASE)
         while i > 0:
             i -= 1
-            sum_ += self
+            sum_ = sum_ + self
         return sum_
 
     @check_value()
     def __truediv__(self, other):
-        if str(self) == "0" or str(other) == "0":
+        if self == self.from_int(0, self._BASE) or other == self.from_int(0, other.base):
             raise ZeroDivisionError("division by zero")
         cls = type(self)
-        i = cls('0', self._BASE)
+        i = cls.from_int(0, self._BASE)
         last = self - other
-        while last >= 0:
-            i += 1
+        while last >= self.from_int(0, self._BASE):
+            i += self.from_int(1, self._BASE)
             last -= other
         return i
 
@@ -276,14 +287,14 @@ class Base:
 
     @check_value()
     def __mod__(self, other):
-        if self._value == "0" or other == "0":
+        if self._value == self.from_int(0, self._BASE) or other == other.from_int(0, other.base):
             raise ZeroDivisionError("division by zero")
         x = self // other
         result = self - (x*other)
         return result
 
     @check_value()
-    def compare(self, other):
+    def compare(self, other) -> float:
         """负值左边小 正值右边小"""
         neg = 1
         if str(self).startswith('-') and str(other).startswith('-'):
@@ -305,42 +316,55 @@ class Base:
 
         return 0
 
+    def lower(self) -> str:
+        return self._value.lower()
+
+    def upper(self) -> str:
+        return self._value.upper()
+
+    @classmethod
+    def load(cls, data: dict) -> Self:
+        return cls(data["value"], data["base"])
+
+    def dump(self) -> dict:
+        return {
+            "base": self._BASE,
+            "value": self._value
+        }
+
+    def encode(self, encoding: str = ..., errors: str = ...) -> bytes:
+        return self._value.encode(encoding=encoding, errors=errors)
+
     @check_value()
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.compare(other) == 0
 
     @check_value()
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return self.compare(other) != 0
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._value)
 
     @check_value()
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return self.compare(other) < 0
 
     @check_value()
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         return self.compare(other) <= 0
 
     @check_value()
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         return self.compare(other) > 0
 
     @check_value()
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         return self.compare(other) >= 0
 
 
 def main():
-    i = Base.dec_to(Base('32', 10), 36)
-    while True:
-        i = i / 2
-        print(i, int(i))
-        if int(i) == 1:
-            break
-        time.sleep(0.01)
+    pass
 
 
 if __name__ == "__main__":
