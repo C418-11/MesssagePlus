@@ -93,16 +93,22 @@ class Base:
     def from_int(cls, n: int, base) -> Self:
         if n == 0:
             return cls(cls._DIGITS[0], base)
+
+        neg = False
         if n < 0:
             n = -n
+            neg = True
         s = ""
         len_ = 0
         while n > 0:
             s = cls._DIGITS[n % base] + s
             n = n // base
             len_ += 1
-            if len_ > 100:  # 限制最大位数为 100
-                raise ValueError("Number of digits exceeds maximum allowed value.")
+            if len_ > cls._MAX_LEN:  # 限制最大位数
+                raise ValueError(f"Number of digits exceeds maximum allowed value. (max={cls._MAX_LEN})")
+        if neg:
+            s = '-' + s
+
         return cls(s, base)
 
     @classmethod

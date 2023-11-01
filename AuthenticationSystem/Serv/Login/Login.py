@@ -7,20 +7,18 @@ __version__ = "0.1"
 
 import sys
 import traceback
-from typing import Union
 
 from tqdm import tqdm
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Events.Login import FAILED
+from AuthenticationSystem.Serv.Login.Database import LoginData
+from AuthenticationSystem.Serv.Login.Database import build_database
 from Lib.SocketIO import SocketIo
 from Lib.config import Progressbar
 from Lib.config import tools as cf_tools
-from Lib.database import logging as db_logging
-from Lib.database.ABC import NameList
 from Lib.database.DataBase import DataBaseClient
-from Lib.database.DataBase import DataBaseServer
 from Lib.database.Event import *
 from Lib.database.Event.ABC import RunSuccess
 from Lib.database.SocketIO import Address as db_Address
@@ -36,17 +34,6 @@ _Config = ServerConfig.Login
 _login_logger = Logging.Logger(_Config.log_level, *_Config.log_files)
 
 
-class LoginData(NameList):
-    def __init__(self, name, login_key):
-        super().__init__(name=name, login_key=login_key)
-
-    name: str
-    login_key: str
-
-    def ToNamelist(self):
-        return NameList(name=self.name, login_key=self.login_key)
-
-
 class LoginDatabaseFailedError(Exception):
     def __init__(self, ret_code):
         self.ret_code = ret_code
@@ -59,30 +46,23 @@ class LoginDatabaseFailedError(Exception):
 
 
 if _DBConfig.BuiltinDatabase.enable:
-    try:
-        level = db_logging.level_list.GetNameLevel(_DBConfig.BuiltinDatabase.log_level)
-    except KeyError:
-        level = db_logging.level_list.GetWeightLevel(_DBConfig.BuiltinDatabase.log_level)
-
     input_file = cf_tools.init_files(_DBConfig.BuiltinDatabase.input_file, 'r')
     log_file = cf_tools.init_files(_DBConfig.BuiltinDatabase.log_file, 'a', newline='\n')
-    s_db = DataBaseServer(
-        name=_DBConfig.Server.name,
-        file=input_file,
+
+    s_db = build_database(
+        name=_DBName,
+        address=_DB_ADDR,
+        max_connections=_DBConfig.BuiltinDatabase.max_connections,
+        log_level=_DBConfig.BuiltinDatabase.log_level,
+        input_file=input_file,
+        enable_log=_DBConfig.BuiltinDatabase.enable_log,
         log_file=log_file,
-        disable_log=_DBConfig.BuiltinDatabase.disable_log,
-        debug=_DBConfig.BuiltinDatabase.debug_mode,
-        log_level=level
+        enable_debug=_DBConfig.BuiltinDatabase.enable_debug,
     )
-    s_db.bind(_DB_ADDR.get())
-    s_db.listen(_DBConfig.BuiltinDatabase.max_connections)
-    s_db.start()
-
-    del level
 
 
-def _init_db_client(login_logger, timeout, client_type):
-    log_head = f"[Login][DBClientLogin][{client_type}]"
+def _init_db_client(login_logger, timeout):
+    log_head = f"[LoginManager][DBClientLogin]"
 
     try:
         client = DataBaseClient(_DB_ADDR)
@@ -123,8 +103,8 @@ def _init_db_client(login_logger, timeout, client_type):
 
 
 def _init_database():
-    c_db = _init_db_client(_login_logger, _Config.timeout, "InitDatabase")
-    log_head = f"[Login][DBServer-AutoInit]"
+    c_db = _init_db_client(_login_logger, _Config.timeout)
+    log_head = f"[LoginManager][DBServer-AutoInit]"
 
     event_ls = [
         LOGIN.ACK_USER_AND_PASSWORD(_DBConfig.Userdata.username, _DBConfig.Userdata.password),
@@ -185,20 +165,23 @@ class LostConnectError(ConnectionError):
         return "Lost connect"
 
 
-class Login:
-    _cSocket: SocketIo
+class LoginManager:
 
-    _login_Config = _Config
-    TIMEOUT = _login_Config.timeout
-    TYPE: Union[None, str]
+    login_Config = _Config
+    TIMEOUT = login_Config.timeout
     login_logger = _login_logger
 
+    def __init__(self, socket: SocketIo, store: str):
+        self._cSocket = socket
+        self.userdata, self.db_client = self._get_data()
+        self._store = store
+
     def _init_db_client(self):
-        return _init_db_client(self.login_logger, self.TIMEOUT, self.TYPE)
+        return _init_db_client(self.login_logger, self.TIMEOUT)
 
     def _get_data(self) -> tuple[Login.ACK_DATA, DataBaseClient]:
 
-        log_head = f"[Login][{self.TYPE}]"
+        log_head = f"[LoginManager]"
 
         addr = self._cSocket.getpeername()
         self.login_logger.debug(f"{log_head} Recv new login request (addr='{addr}')")
@@ -253,9 +236,7 @@ class Login:
         return data, client
 
     def _find_user_in_db(self, uuid):
-        # todo
-        ...
+        self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
 
 
-
-__all__ = ("LoginData", "LoginDatabaseFailedError", "LostConnectError", "Login")
+__all__ = ("LoginDatabaseFailedError", "LostConnectError", "LoginManager")

@@ -4,6 +4,7 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+from enum import IntEnum
 
 from AuthenticationSystem.Events.Base import Event, EventWithData, SuccessEvent, FailEvent
 
@@ -100,7 +101,7 @@ SUCCESS = _LoginSuccess
 class _LoginFailed(EventWithData, FailEvent):
     Name = "Login.LOGIN_FAILED"
 
-    class TYPE:
+    class TYPE(IntEnum):
         UNKNOWN_SERVER_ERROR = -1
         NOTSET = 0
         INVALID_CLIENT_TYPE = 1

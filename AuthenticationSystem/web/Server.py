@@ -99,7 +99,7 @@ class Server(SocketServer):
         super().join(timeout)
 
     def restart(self, init_socket: Union[tuple, socket.socket]):
-        """banned func, i don't think it's necessary to restart server"""
+        """banned func, I don't think it's necessary to restart server"""
         raise AttributeError("Server can not restart!")
 
     @Disable

@@ -4,22 +4,16 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-import sys
-from abc import ABC
-from abc import abstractmethod
 from threading import Thread
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
-from AuthenticationSystem.Events import Login
-from AuthenticationSystem.Events.Login import FAILED
 from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
 from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
-from AuthenticationSystem.Serv.Login.Login import Login, LostConnectError
+from AuthenticationSystem.Serv.Login.Login import LoginManager
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
-from Lib.database.DataBase import DataBaseClient
 from Lib.log import Logging
 from Lib.simple_tools import ThreadPool
 
@@ -29,59 +23,12 @@ class LoginFailed(Exception):
         return "Login Failed"
 
 
-class LoginManagerMixin(Login, ABC):
+class LoginMixin(LoginManager):
 
-    db_client: DataBaseClient
-    user_data: dict
-    _cSocket: SocketIo
-
-    @property
-    @abstractmethod
-    def logger(self) -> Logging.Logger:
-        ...
-
-    def _stop(self, _addr, *, fail_reason=None):
-        if fail_reason is not None:
-            self._cSocket.send_json(Login.FAILED(fail_reason).dump())
-        self.logger.debug(f"[{self.TYPE}] Stop (addr='{_addr}')")
-        self._cSocket.close()
-        try:
-            self.db_client.close()
-        except AttributeError:
-            pass
-        self.logger.error(f"[{self.TYPE}] Exit")
-        sys.exit(1)
-
-    def get_data(self, _addr):
-        try:
-            raw_user_data, db_client = super()._get_data()
-        except LostConnectError:
-            self.login_logger.debug(f"[{self.TYPE}] LostConnectError (addr='{_addr}')")
-            self._stop(_addr)
-            raise LoginFailed
-        self.db_client = db_client
-        user_data = raw_user_data.dump().values()
-        user_data = list(user_data)[0]
-
-        if user_data["client_type"] != self.TYPE:
-            repr_ = f"(addr='{_addr}' type='{user_data['client_type']}' need_type='{self.TYPE}')"
-            self.logger.warn(
-                f"[{self.TYPE}] Invalid client type {repr_}"
-            )
-            self._stop(_addr, fail_reason=FAILED.TYPE.INVALID_CLIENT_TYPE)
-            raise LoginFailed
-
-        try:
-            self._cSocket.send_json(Login.SUCCESS().dump())
-        except ConnectionError:
-            self.logger.debug(f"[{self.TYPE}] Lost Connect! #just before i told it login success (addr='{_addr}')")
-            self._stop(_addr)
-            raise LoginFailed
-
-        self.user_data = user_data
+    def __init__(self, socket: SocketIo, store: str):
+        super().__init__(socket, store)
 
     def login(self, addr):
-        self.get_data(addr)
 
         self._find_user_in_db(...)  # todo
         # warn todo
@@ -91,7 +38,7 @@ class LoginManagerMixin(Login, ABC):
 
 
 @ServiceTypeRegistry
-class Client(ABCService, LoginManagerMixin):
+class Client(ABCService, LoginMixin):
     Config = ServerConfig.ClientType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "Client"
@@ -108,7 +55,7 @@ class Client(ABCService, LoginManagerMixin):
 
 
 @ServiceTypeRegistry
-class ChatServer(ABCService, LoginManagerMixin):
+class ChatServer(ABCService, LoginMixin):
     Config = ServerConfig.ChatServerType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "ChatServer"

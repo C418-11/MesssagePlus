@@ -46,9 +46,9 @@ class DataTypeAnnotation:
         enable: bool
         log_file: str
         input_file: str
-        disable_log: bool
+        enable_log: bool
         log_level: Union[str, int]
-        debug_mode: bool
+        enable_debug: bool
         max_connections: int
 
     class AutoInit:
@@ -77,9 +77,9 @@ class _DataBaseInjection:
                         "enable": True,
                         "log_file": "stderr",
                         "input_file": None,
-                        "disable_log": True,
+                        "enable_log": True,
                         "log_level": db_logging.NOTSET.name,
-                        "debug_mode": True,
+                        "enable_debug": True,
                         "max_connections": 10,
                     },
                     "database_name": "LoginData",
