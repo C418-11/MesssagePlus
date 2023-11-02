@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
-import traceback
+
+
+__author__ = "C418____11 <553515788@qq.com>"
+__version__ = "0.1"
+
+
 from datetime import datetime
-from functools import wraps
 
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtWidgets, QtGui
-
-
-def showException(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as err:
-            traceback.print_exception(err)
-    return wrapper
 
 
 class Message(QtWidgets.QWidget):

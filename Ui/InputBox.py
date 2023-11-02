@@ -7,24 +7,14 @@ __version__ = "0.1"
 
 import os
 import sys
-import traceback
-from functools import wraps
-from typing import Sequence, Union
+from typing import Union
 
 from PyQt5.QtCore import QRect, QPoint, Qt, QFileInfo, pyqtSignal, QObject, QUrl, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QListWidget, QTextEdit, QLineEdit, QPushButton, \
     QGraphicsView, QLabel, QFileIconProvider
 
-
-def showException(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as err:
-            traceback.print_exception(err)
-    return wrapper
+from Ui.tools import showException
 
 
 class Getter(QTextEdit):
@@ -47,8 +37,23 @@ class Getter(QTextEdit):
     @showException
     def dropEvent(self, event):
         for sth in event.mimeData().urls():
-            print(sth)
             self.recv_file.emit(sth)
+
+
+def limit_file_name(name, max_length, max_not_show=3):
+    file_name, ext_name = os.path.splitext(name)  # 分离后缀
+
+    limited_name = file_name[::-1][:max(max_length - len(ext_name), 0)][::-1]  # 从后往前截取指定长度 (额外减掉了后缀的长度)
+
+    not_show_length = min(max_not_show, max(len(limited_name), 0))  # 获取要替换的字符串长度
+    not_show_index = not_show_length - max(max_length - len(limited_name) - len(ext_name), 0)  # 根据长度获取要替换的字符串的位置
+    not_show_index = max(not_show_index, 0)  # 限制值不小于0
+
+    limited_name = '*' * len(limited_name[0:not_show_index]) + limited_name[not_show_index:]  # 替换要替换的部分
+
+    limited_ext = ext_name[::-1][:max_length][::-1]  # 从后往前截取指定长度
+
+    return limited_name + limited_ext
 
 
 class FileShow(QWidget):
@@ -65,13 +70,14 @@ class FileShow(QWidget):
 
         self.setPixmap(self.GetLocalFileImage(file_path))
 
-        self.setText(self.fimeName())
+        self.file_name_label.move(self.pos()+QPoint(0, self.height()))
+        self.setText(limit_file_name(self.fimeName(), 20))
 
         self.resize_event.connect(self.resize_child)
 
     def resize_child(self, a0: QSize):
         self.file_img_label.resize(a0)
-        self.file_name_label.resize(a0)
+        self.file_name_label.resize(QSize(a0.width(), self.file_name_height))
 
     def fimeName(self):
         return os.path.basename(self.file_path)
@@ -108,7 +114,9 @@ class FileShow(QWidget):
             qsize = QSize(*args)
         else:
             raise TypeError("Unknown value (help(resize) for info)")
-        super().resize(qsize)
+        print(self.size())
+        super().resize(qsize + QSize(0, self.file_name_height))
+        print(self.size())
         self.resize_event.emit(qsize)
 
 
@@ -130,9 +138,9 @@ class GetInput(QWidget):
         self.line = [[]]
         self.index = [0, 0]  # y, x
         self._course_pos = [0, 0]  # y, x
-        self.img_size = 32, 32
+        self.img_size = 128, 32  # width, height
 
-        self.Getter.recv_file.connect(self.ToLabel)
+        self.Getter.recv_file.connect(self.ToWidget)
 
     def AutoNextLine(self, widget: QWidget):
         """
@@ -162,13 +170,12 @@ class GetInput(QWidget):
             self.line[self.index[0]].append(event.pos())
 
     @showException
-    def ToLabel(self, url: QUrl):
+    def ToWidget(self, url: QUrl):
 
         if url.isLocalFile():
-            file_shower = FileShow(self, url.toLocalFile())
+            file_shower = FileShow(self, url.toLocalFile(), 20)
             file_shower.resize(*self.img_size)
             self.AutoNextLine(file_shower)
-            print(self.line)
 
 
 if __name__ == "__main__":
