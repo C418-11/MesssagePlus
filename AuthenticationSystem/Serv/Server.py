@@ -26,7 +26,7 @@ class LoginFailed(Exception):
 class LoginMixin(LoginManager):
 
     def __init__(self, socket: SocketIo, store: str):
-        super().__init__(socket, store)
+        LoginManager.__init__(self, socket, store)
 
     def login(self, addr):
 
@@ -44,7 +44,8 @@ class Client(ABCService, LoginMixin):
     TYPE = "Client"
 
     def __init__(self, conn, addr, *_, **__):
-        super().__init__(conn, addr)
+        ABCService.__init__(self, conn, addr)
+        LoginMixin.__init__(self, self._cSocket, self.TYPE)
 
     def start(self):
         self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
@@ -52,6 +53,8 @@ class Client(ABCService, LoginMixin):
             self.login(self._address)
         except LoginFailed:
             pass
+        self._cSocket.close()
+        self.db_client.close()
 
 
 @ServiceTypeRegistry

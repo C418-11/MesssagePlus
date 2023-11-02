@@ -48,7 +48,7 @@ class LogMixin(Base.ConfigIoLike):
         return {
             os.path.join(self.BASE_DIR, "logger.json"): {
                 "data": {
-                    "log_level": Level.WARN.level,
+                    "log_level": Level.INFO.level,
                     "file": "stdout",
                     "warn_file": "stderr"
                 },

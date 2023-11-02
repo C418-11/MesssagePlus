@@ -77,7 +77,7 @@ class _DataBaseInjection:
                         "enable": True,
                         "log_file": "stderr",
                         "input_file": None,
-                        "enable_log": True,
+                        "enable_log": False,
                         "log_level": db_logging.NOTSET.name,
                         "enable_debug": True,
                         "max_connections": 10,
