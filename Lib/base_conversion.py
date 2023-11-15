@@ -270,8 +270,8 @@ class Base:
     def __mul__(self, other):
         i = type(self)(other, self._BASE)
         sum_ = self.from_int(0, self._BASE)
-        while i > 0:
-            i -= 1
+        while i > self.from_int(0, self._BASE):
+            i -= self.from_int(1, self._BASE)
             sum_ = sum_ + self
         return sum_
 
