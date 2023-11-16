@@ -10,6 +10,9 @@ import colorama
 
 
 class ColorWrite:
+    """
+    Output to the specified color
+    """
     def __init__(self, super_, font_color=None, bg_color=None):
         colorama.init()
         self.super_ = super_
