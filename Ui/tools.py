@@ -65,7 +65,6 @@ def getFileImage(
         *,
         scaled_args=(Qt.KeepAspectRatio, Qt.SmoothTransformation)
 ) -> QPixmap:
-
     file_info = QFileInfo(file_path)
     icon_provider = QFileIconProvider()
 
@@ -93,10 +92,10 @@ def add_line_breaks(text: str, width: int, font_metrics: QFontMetrics):
         return font_metrics.size(Qt.TextExpandTabs, _text).width()
 
     # 获取文本宽度
-    pix = get_width(text)
+    text_width = get_width(text)
 
     # 如果文本宽度不超过指定的宽度，则直接返回文本
-    if pix < width:
+    if text_width < width:
         return text
 
     # 否则，需要在文本中添加换行符
@@ -109,38 +108,20 @@ def add_line_breaks(text: str, width: int, font_metrics: QFontMetrics):
     result = ''
     for line in lines:
         # 获取子字符串的宽度
-        pix = get_width(line)
+        line_width = get_width(line)
         # 如果子字符串的宽度不超过指定的宽度，则直接将其添加到结果字符串中
-        if pix < width:
+        if line_width < width:
             result += line + '\n'
         # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
         else:
-            # 这里使用了字符串的split和join方法
-            # 将子字符串按照空格分割成多个子字符串
-            words = line.split(' ')
-            # 遍历每个子字符串，并计算其宽度
-            # 如果子字符串的宽度不超过指定的宽度，则直接将其添加到结果字符串中
-            # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
-            for word in words:
-                pix = get_width(word)
-                if pix < width:
-                    result += word + ' '
+            chr_width = 0
+            for sub_word in str(line):
+                chr_width += get_width(sub_word)
+                if chr_width < width:
+                    result += sub_word
                 else:
-                    # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
-                    # 这里使用了字符串的split和join方法
-                    # 将子字符串按照换行符分割成多个子字符串
-                    sub_words = list(word)
-                    # 遍历每个子字符串，并计算其宽度
-                    # 如果子字符串的宽度不超过指定的宽度，则直接将其添加到结果字符串中
-                    # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
-                    pix = 0
-                    for sub_word in sub_words:
-                        pix += get_width(sub_word)
-                        if pix < width:
-                            result += sub_word
-                        else:
-                            result += '\n' + sub_word
-                            pix = 0
+                    result += '\n' + sub_word
+                    chr_width = 0
 
     # 返回结果字符串
     return result

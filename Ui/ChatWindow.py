@@ -126,7 +126,7 @@ class Message(QWidget):
             super().__init__(parent)
             self.setObjectName("ShowMessage")
             self.raw_message = message
-            self.size_width = width-25
+            self.size_width = width-50
 
             if font is not None:
                 self.setFont(font)
