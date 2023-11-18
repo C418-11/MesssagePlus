@@ -5,26 +5,28 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-from itertools import count
-from typing import Optional
-
-from Lib.base_conversion import Base
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import count
+from typing import Optional, Union
 
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import QMetaObject
 from PyQt5.QtCore import QPoint
 from PyQt5.QtCore import QRect
-from PyQt5.QtCore import QMetaObject
-from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QScrollArea
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QFrame
-from PyQt5.QtWidgets import QTextEdit
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QScrollArea
+from PyQt5.QtWidgets import QTextEdit
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
+
+from Lib.base_conversion import Base
 from Ui.BaseWidgets import SmoothlyScrollArea
+from Ui.tools import add_line_breaks
 
 
 @dataclass
@@ -34,63 +36,113 @@ class MessageData:
     message: str
     username: str
     time_stamp: float
+    font: Optional[Union[str, QFont]] = None
     """
     message_uuid: Base
     message: str
     username: str
     time_stamp: float
+    font: Optional[Union[str, QFont]] = None
 
 
 class Message(QWidget):
-    def __init__(self, scroll_area, /, *, message_data: MessageData):
+    def __init__(self, scroll_area: QWidget, /, *, message_data: MessageData):
         super().__init__(scroll_area)
-        self.setMinimumSize(QSize(500, 50))
-        geometry = list(self.geometry().getRect())
-        geometry[1] = 0
-        geometry[3] = 50
-        self.setGeometry(QRect(*geometry))
+
         self.setObjectName("Message")
         self.message_data = message_data
-        self.time_label = self.TimeLabel(self, time_stamp=self.message_data.time_stamp)
-        self.message = self.ShowMessage(self, message=self.message_data.message)
-        self.username_label = self.UsernameLabel(self, username=self.message_data.username)
 
-        self.time_label.move(QPoint(0, 0))
-        self.message.move(QPoint(0, 12))
-        self.username_label.move(QPoint(0, 22))
+        width = scroll_area.width()
+        self.setMaximumWidth(width)
+        self.username_label = self.UsernameLabel(
+            self,
+            width=width,
+            username=self.message_data.username,
+            font=message_data.font
+        )
+        self.time_label = self.TimeLabel(
+            self,
+            width=width,
+            time_stamp=self.message_data.time_stamp,
+            font=message_data.font
+        )
+        self.message = self.ShowMessage(
+            self,
+            width=width,
+            message=self.message_data.message,
+            font=message_data.font
+        )
+
+        self.username_label.setAlignment(Qt.AlignCenter)
+        self.time_label.setAlignment(Qt.AlignCenter)
+
+        self.username_label.move(QPoint(0, 0))
+        self.time_label.move(QPoint(0, self.username_label.height()))
+        self.message.move(QPoint(0, self.time_label.y() + self.time_label.height()))
+
+        min_height = self.time_label.height() + self.username_label.height() + self.message.height()
+        self.setMinimumHeight(min_height)
 
     class TimeLabel(QLabel):
-        def __init__(self, parent, /, *, time_stamp: float) -> None:
+        def __init__(self, parent: QWidget, /, *, time_stamp: float, width: int, font: QFont) -> None:
             super().__init__(parent)
-            self.resize(QSize(200, 8))
             self.setObjectName("Time")
             self.time_stamp = time_stamp
+            self.size_width = width
+            if font is not None:
+                self.setFont(font)
             self.ReTranslateUi()
+            self.RefreshSize()
 
         def ReTranslateUi(self):
             _translate = QCoreApplication.translate
             time_format = _translate("TimeLabel", "%Y-%m-%d %H:%M:%S.%f")
             time_str = datetime.fromtimestamp(self.time_stamp).strftime(time_format)
+
             self.setText(time_str)
 
+        def RefreshSize(self):
+            min_size = self.fontMetrics().size(Qt.TextExpandTabs, self.text())
+            self.resize(self.size_width, min_size.height())
+
     class UsernameLabel(QLabel):
-        def __init__(self, parent, /, *, username):
+        def __init__(self, parent: QWidget, /, *, username, width: int, font: QFont):
             super().__init__(parent)
-            self.resize(QSize(200, 16))
             self.setObjectName("Username")
             self.username = username
+            self.size_width = width
+            if font is not None:
+                self.setFont(font)
+
             self.setText(self.username)
+            self.RefreshSize()
+
+        def RefreshSize(self):
+            min_size = self.fontMetrics().size(Qt.TextExpandTabs, self.text())
+            self.resize(self.size_width, min_size.height())
 
     class ShowMessage(QLabel):
-        def __init__(self, parent, /, *, message):
+        def __init__(self, parent: QWidget, /, *, message: str, width: int, font: QFont):
             super().__init__(parent)
             self.setObjectName("ShowMessage")
-            self.message = message
+            self.raw_message = message
+            self.size_width = width-25
+
+            if font is not None:
+                self.setFont(font)
+
+            self.message = add_line_breaks(self.raw_message, self.size_width, self.fontMetrics())
+            self.RefreshSize()
+
             self.setText(self.message)
+
+        def RefreshSize(self):
+            min_size = self.fontMetrics().size(Qt.TextExpandTabs, self.message)
+            self.resize(min_size.width(), min_size.height())
 
 
 class UIChatWindow(object):
-    def __init__(self, main_window):
+    def __init__(self, main_window: QMainWindow):
         self.MainWindow = main_window
         self.Getter: Optional[QTextEdit] = None
         self.SendMessageButton: Optional[QPushButton] = None
@@ -120,14 +172,14 @@ class UIChatWindow(object):
 
         self.MessageArea = SmoothlyScrollArea(self.MainWidget)
         self.MessageArea.setGeometry(QRect(0, 0, 600, 450))
-        # self.MessageArea.setFrameShadow(QtWidgets.QFrame.Raised)
-        # # self.MessageArea.setLineWidth(0)
+        # self.MessageArea.setFrameShadow(QFrame.Raised)
         self.MessageArea.setWidgetResizable(True)
-        # self.MessageArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.MessageArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.MessageArea.setObjectName("MessageArea")
 
         self.MessageScrollContents = QWidget(self.MessageScrollContents)
-        self.MessageScrollContents.setGeometry(QRect(0, 0, 599, 449))
+        self.MessageScrollContents.setMaximumWidth(self.MessageArea.width()-2)
+        self.MessageScrollContents.setMinimumWidth(self.MessageArea.width()-2)
         self.MessageScrollContents.setObjectName("MessageScrollContents")
 
         self.MessageLayout = QVBoxLayout(self.MessageScrollContents)

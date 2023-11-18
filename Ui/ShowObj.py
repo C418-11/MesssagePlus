@@ -7,9 +7,10 @@ __version__ = "0.1"
 import os
 from typing import Union
 
-from PyQt5.QtCore import QSize, pyqtSignal, QPoint, QFileInfo, Qt
-from PyQt5.QtGui import QFont, QPixmap
-from PyQt5.QtWidgets import QWidget, QLabel, QFileIconProvider
+from PyQt5.QtCore import QSize, pyqtSignal, QPoint, Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QWidget, QLabel
+
 from Ui.tools import fontFromPath, elidedText, getFileImage
 
 
