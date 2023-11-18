@@ -44,14 +44,15 @@ class Getter(QTextEdit):
         print('-'*70)
         print(self.toPlainText())
         print("++"*10)
-        print(get(self.toPlainText(), self.last_text))
+        print(get(list(enumerate(self.toPlainText())), list(enumerate(self.last_text))))
         print('-'*70)
         self.last_text = self.toPlainText()
 
 
 def get(now_str, old_str):
     if now_str != old_str:
-        changes = [(c1, c2) for c1, c2 in zip(now_str, old_str) if c1 in now_str and c1 not in old_str]
+        #changes = [(c1, c2) for c1, c2 in zip(now_str, old_str) if c1 in now_str and c1 not in old_str]
+        changes = []
         changes.extend([("add", c1) for c1 in now_str if c1 not in old_str])
         changes.extend([("sub", c1) for c1 in old_str if c1 not in now_str])
     else:

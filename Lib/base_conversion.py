@@ -11,7 +11,7 @@ from typing import Self
 
 MAX_LEN = 30
 DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
-BASE = len(DIGITS)
+MAX_BASE = len(DIGITS)
 
 
 def check_value(base=None, type_="self", index=0):
@@ -375,3 +375,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+__all__ = ("MAX_LEN", "MAX_BASE", "DIGITS", "Base")

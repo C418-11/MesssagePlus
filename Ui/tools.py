@@ -40,11 +40,18 @@ def fontFromPath(font_path, point_size=None):
     return font
 
 
-def elidedText(text, font: Union[QFont, str], max_width, mode=Qt.ElideMiddle):
+def elidedText(text, font: Union[QFont, QFontMetrics, str], max_width, mode=Qt.ElideMiddle):
     if isinstance(font, str):
         font = fontFromPath(font)
+    if isinstance(font, QFont):
+        font = QFontMetrics(font)
+    if isinstance(font, QFontMetrics):
+        fm = font
+    else:
+        # 抛出TypeError告诉调用者无法将font转换为QFontMetrics
+        raise TypeError("font must be a QFont, QFontMetrics or str"
+                        " but got {}".format(type(font)))
 
-    fm = QFontMetrics(font)
     return fm.elidedText(text, mode, max_width)
 
 
@@ -63,7 +70,9 @@ def getFileImage(
     elif not isinstance(size, QSize):
         raise TypeError("size must be None or QSize")
 
-    if os.path.splitext(file_path)[1].lower() in (
+    ext_name = os.path.splitext(file_path)[1].lower()
+
+    if ext_name in (
             ".jpg", ".jpeg", ".png", ".bmp", ".gif", "ppm", ".tif", ".tiff", ".xbm", ".xpm"
     ):
         pixmap = QPixmap(file_path)
