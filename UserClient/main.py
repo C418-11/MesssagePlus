@@ -23,10 +23,8 @@ def main():
     @showException
     def clicked(*_):
         txt = str(ui.Getter.toPlainText())
-        ui.add(MessageData(Base.from_int(10, 10), txt, "You", time.time()))
+        ui.add(MessageData(Base.from_int(10, 10), txt, "You", time.time()), 15)
         ui.Getter.clear()
-        for x in range(30):
-            ui.add(MessageData(Base.from_int(10, 10), str(x), "You", time.time()), 15)
 
     # noinspection PyUnresolvedReferences
     ui.SendMessageButton.clicked.connect(clicked)
