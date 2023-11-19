@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import QWidget
 
 from Lib.base_conversion import Base
 from Ui.BaseWidgets import SmoothlyScrollArea
+from Ui.BaseWidgets import RoundShadow
 from Ui.tools import add_line_breaks
 
 
@@ -45,7 +46,7 @@ class MessageData:
     font: Optional[Union[str, QFont]] = None
 
 
-class Message(QWidget):
+class Message(RoundShadow, QWidget):
     def __init__(self, scroll_area: QWidget, /, *, message_data: MessageData):
         super().__init__(scroll_area)
 
@@ -54,6 +55,8 @@ class Message(QWidget):
 
         width = scroll_area.width()
         self.setMaximumWidth(width)
+        self.setMinimumWidth(width)
+        width -= 10
         self.username_label = self.UsernameLabel(
             self,
             width=width,
@@ -76,12 +79,13 @@ class Message(QWidget):
         self.username_label.setAlignment(Qt.AlignCenter)
         self.time_label.setAlignment(Qt.AlignCenter)
 
-        self.username_label.move(QPoint(0, 0))
-        self.time_label.move(QPoint(0, self.username_label.height()))
-        self.message.move(QPoint(0, self.time_label.y() + self.time_label.height()))
+        self.username_label.move(QPoint(10, 0))
+        self.time_label.move(QPoint(10, self.username_label.height()))
+        self.message.move(QPoint(10, self.time_label.y() + self.time_label.height()))
 
         min_height = self.time_label.height() + self.username_label.height() + self.message.height()
         self.setMinimumHeight(min_height)
+        self.background_rect = QRect(self.x(), self.y(), width-10, min_height)
 
     class TimeLabel(QLabel):
         def __init__(self, parent: QWidget, /, *, time_stamp: float, width: int, font: QFont) -> None:
@@ -154,13 +158,13 @@ class UIChatWindow(object):
         self.messages: dict[Base, Message] = {}
         self.count_message = count()
 
-    def add(self, message_data: MessageData):
+    def add(self, message_data: MessageData, spacing: int = 0):
         msg_obj = Message(self.MessageScrollContents, message_data=message_data)
         msg_obj.resize(self.MessageScrollContents.width(), msg_obj.height())
         msg_obj.show()
         self.MessageLayout.addWidget(msg_obj)
         self.MessageLayout.setStretchFactor(msg_obj, 12)
-        self.MessageLayout.setSpacing(0)
+        self.MessageLayout.setSpacing(spacing)
         self.MessageLayout.setStretch(next(self.count_message)-1, 1)
         self.messages[message_data.message_uuid] = msg_obj
 

@@ -8,12 +8,91 @@ __version__ = "0.1"
 from collections import deque
 from enum import Enum
 from math import cos, pi
+from typing import Optional, Union
+from dataclasses import dataclass
 
-from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint
-from PyQt5.QtGui import QWheelEvent
-from PyQt5.QtWidgets import QApplication, QScrollArea
+from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint, QRectF
+from PyQt5.QtGui import QWheelEvent, QColor, QPainter, QPainterPath, QBrush
+from PyQt5.QtWidgets import QApplication, QScrollArea, QWidget
 
 from Ui.tools import showException
+
+
+@dataclass
+class Radius:
+    xRadius: int
+    yRadius: int
+
+
+class RoundShadow(QWidget):
+    """圆角边框类"""
+
+    @showException
+    def __init__(
+            self,
+            parent=None,
+            /, *,
+            radius: Optional[Radius] = None,
+            background_color: Optional[QColor] = None,
+            draw_shadow: bool = False,
+            translucent_background: bool = False
+    ):
+        super().__init__(parent)
+        self.border_width = 8
+        self.draw_shadow = draw_shadow
+        self.shadow_color = QColor(192, 192, 192, 50)
+
+        if radius is None:
+            radius = Radius(xRadius=4, yRadius=4)
+        if background_color is None:
+            background_color = Qt.white
+        self.background_color = background_color
+
+        self.radius = radius
+        self.background_rect = self.rect()
+
+        if translucent_background:
+            self.setAttribute(Qt.WA_TranslucentBackground)
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+
+    def shadow(self):
+        path = QPainterPath()
+        path.setFillRule(Qt.WindingFill)
+
+        pat = QPainter(self)
+        pat.setRenderHint(pat.Antialiasing)
+        pat.fillPath(path, QBrush(Qt.white))
+
+        color = self.shadow_color
+
+        for i in range(10):
+            i_path = QPainterPath()
+            i_path.setFillRule(Qt.WindingFill)
+            ref = QRectF(10 - i, 10 - i, self.width() - (10 - i) * 2, self.height() - (10 - i) * 2)
+            i_path.addRoundedRect(ref, self.border_width, self.border_width)
+            color.setAlpha(int(150 - i ** 0.5 * 50))
+            pat.setPen(color)
+            pat.drawPath(i_path)
+
+    def fillet(self):
+        # 圆角
+        pat2 = QPainter(self)
+        pat2.setRenderHint(pat2.Antialiasing)  # 抗锯齿
+        pat2.setBrush(self.background_color)
+        pat2.setPen(Qt.transparent)
+
+        rect = self.background_rect
+        rect.setLeft(rect.left())
+        rect.setTop(rect.top())
+        rect.setWidth(rect.width())
+        rect.setHeight(rect.height())
+        pat2.drawRoundedRect(rect, self.radius.xRadius, self.radius.yRadius)
+
+    @showException
+    def paintEvent(self, *args):
+        if self.draw_shadow:
+            self.shadow()
+        self.fillet()
 
 
 class SmoothlyScrollArea(QScrollArea):
@@ -142,4 +221,4 @@ class SmoothMode(Enum):
     COSINE = 4
 
 
-__all__ = ("SmoothlyScrollArea", "SmoothMode")
+__all__ = ("SmoothlyScrollArea", "SmoothMode", "RoundShadow")
