@@ -14,9 +14,9 @@ from numbers import Integral
 from numbers import Real
 from threading import Thread
 from typing import Any
+from typing import Optional
 from typing import Tuple
 from typing import Union
-from typing import Optional
 
 
 class Address:

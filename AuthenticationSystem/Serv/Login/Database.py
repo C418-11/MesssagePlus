@@ -5,9 +5,9 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 from numbers import Real
-from typing import TextIO
-from typing import Self
 from typing import Optional
+from typing import Self
+from typing import TextIO
 
 from Lib.SocketIO import Address
 from Lib.database import logging

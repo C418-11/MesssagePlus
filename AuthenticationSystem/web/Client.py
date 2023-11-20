@@ -3,8 +3,8 @@
 
 
 import socket
-from typing import Union
 from typing import Optional
+from typing import Union
 
 from tqdm import tqdm
 
