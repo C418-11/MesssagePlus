@@ -7,7 +7,6 @@ import subprocess
 from typing import Union
 
 from Cython.Build import cythonize
-from setuptools import find_packages
 from setuptools import setup
 
 
@@ -69,7 +68,6 @@ class PyToPyd:
                 "--build-temp",
                 self.temp_path,
             ],
-            packages=find_packages(),
             install_requires=self._dependency_versions(),
             author="C418____11",
             author_email="553515788@qq.com",
@@ -102,6 +100,8 @@ def _main():
     def a():
         compiler.make_all(r"F:\Message_Plus\Lib")
         compiler.make_all(r"F:\Message_Plus\AuthenticationSystem")
+        compiler.make_all(r"F:\Message_Plus\Ui")
+        compiler.make_all(r"F:\Message_Plus\UserClient")
 
     def b():
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
@@ -116,6 +116,8 @@ def _main():
             b()
         case 4:
             exit()
+        case 5:
+            print(_get_dependency_versions())
         case _:
             print("Unknown type")
 

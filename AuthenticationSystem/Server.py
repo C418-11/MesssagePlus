@@ -5,14 +5,14 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 
-from Config import ServerConfig
+from AuthenticationSystem.Config import ServerConfig
 from Lib.SocketIO import Address
 
 config = ServerConfig.Server
 
 
 def main():
-    from web.Server import Server
+    from AuthenticationSystem.web.Server import Server
 
     s = Server()
 

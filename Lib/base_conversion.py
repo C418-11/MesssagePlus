@@ -6,8 +6,8 @@ __version__ = "0.1"
 
 import functools
 from itertools import zip_longest
-from typing import Union
 from typing import Self
+from typing import Union
 
 MAX_LEN = 30
 DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
@@ -338,7 +338,7 @@ class Base:
             "value": self._value
         }
 
-    def encode(self, encoding: str = ..., errors: str = ...) -> bytes:
+    def encode(self, encoding: str, errors: str) -> bytes:
         return self._value.encode(encoding=encoding, errors=errors)
 
     @check_value()

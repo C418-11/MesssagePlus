@@ -6,10 +6,10 @@ __version__ = "0.1"
 
 
 from collections import deque
+from dataclasses import dataclass
 from enum import Enum
 from math import cos, pi
-from typing import Optional, Union
-from dataclasses import dataclass
+from typing import Optional
 
 from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint, QRectF
 from PyQt5.QtGui import QWheelEvent, QColor, QPainter, QPainterPath, QBrush
@@ -68,7 +68,8 @@ class RoundShadow(QWidget):
         for i in range(10):
             i_path = QPainterPath()
             i_path.setFillRule(Qt.WindingFill)
-            ref = QRectF(10 - i, 10 - i, self.width() - (10 - i) * 2, self.height() - (10 - i) * 2)
+            t = 10 - i
+            ref = QRectF(t, t, self.width() - t * 2, self.height() - t * 2)
             i_path.addRoundedRect(ref, self.border_width, self.border_width)
             color.setAlpha(int(150 - i ** 0.5 * 50))
             pat.setPen(color)
@@ -111,16 +112,16 @@ class SmoothlyScrollArea(QScrollArea):
         """
         super().__init__(parent)
         self.orient = orient
-        self.fps = 60
-        self.duration = 400
-        self.stepsTotal = 0
-        self.stepRatio = 4
-        self.acceleration = 1
-        self.lastWheelEvent = None
-        self.scrollStamps = deque()
-        self.stepsLeftQueue = deque()
-        self.smoothMoveTimer = QTimer(self)
-        self.smoothMode = SmoothMode(SmoothMode.LINEAR)
+        self.fps: int = 60
+        self.duration: int = 400
+        self.stepsTotal: int = 0
+        self.stepRatio: float = 4
+        self.acceleration: float = 1
+        self.lastWheelEvent: Optional[QWheelEvent] = None
+        self.scrollStamps: deque = deque()
+        self.stepsLeftQueue: deque = deque()
+        self.smoothMoveTimer: QTimer = QTimer(self)
+        self.smoothMode: SmoothMode = SmoothMode(SmoothMode.LINEAR)
         # noinspection PyUnresolvedReferences
         self.smoothMoveTimer.timeout.connect(self._smoothMove)
 
@@ -162,17 +163,17 @@ class SmoothlyScrollArea(QScrollArea):
         total_delta = 0
 
         for i in self.stepsLeftQueue:
-            total_delta += int(self._subDelta(i[0], i[1]))
+            total_delta += self._subDelta(i[0], i[1])
             i[1] -= 1
 
         while self.stepsLeftQueue and self.stepsLeftQueue[0][1] == 0:
             self.stepsLeftQueue.popleft()
 
         if self.orient == Qt.Vertical:
-            p = QPoint(0, total_delta)
+            p = QPoint(0, round(total_delta))
             bar = self.verticalScrollBar()
         else:
-            p = QPoint(total_delta, 0)
+            p = QPoint(round(total_delta), 0)
             bar = self.horizontalScrollBar()
 
         e = QWheelEvent(

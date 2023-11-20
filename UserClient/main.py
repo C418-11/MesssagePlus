@@ -8,10 +8,11 @@ __version__ = "0.1"
 import sys
 import time
 
-from Lib.base_conversion import Base
-from Ui.tools import showException
 from PyQt5.QtWidgets import QApplication, QMainWindow
+
+from Lib.base_conversion import Base
 from Ui.ChatWindow import UIChatWindow, MessageData
+from Ui.tools import showException
 
 
 def main():

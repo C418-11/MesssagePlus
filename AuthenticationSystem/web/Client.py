@@ -7,7 +7,7 @@ from typing import Union
 
 from tqdm import tqdm
 
-from AuthenticationSystem.Events.Login import *
+from AuthenticationSystem.Events.Login import ACK_DATA
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.simple_tools import Disable

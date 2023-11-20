@@ -19,7 +19,9 @@ from Lib.SocketIO import SocketIo
 from Lib.config import Progressbar
 from Lib.config import tools as cf_tools
 from Lib.database.DataBase import DataBaseClient
-from Lib.database.Event import *
+from Lib.database.Event import DATABASE
+from Lib.database.Event import LOGIN
+from Lib.database.Event import STORE
 from Lib.database.Event.ABC import RunSuccess
 from Lib.database.SocketIO import Address as db_Address
 from Lib.global_thread_lock import OutputLock
@@ -125,7 +127,7 @@ def _init_database():
     progress_bar = tqdm(
         total=len(event_ls),
         leave=True,
-        unit="events",
+        unit="event",
         desc="DBServer-AutoInit",
         file=sys.stdout,
     )

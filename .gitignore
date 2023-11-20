@@ -1,6 +1,15 @@
 __pycache__
+# idea dir
 venv312
-venv
 .idea
 .git
+# tool dir
 build_pyd
+build
+dist
+# resource dir
+resource
+font
+# runtime dir
+configs
+DataBases

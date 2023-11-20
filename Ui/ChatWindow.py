@@ -25,8 +25,8 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
 from Lib.base_conversion import Base
-from Ui.BaseWidgets import SmoothlyScrollArea
 from Ui.BaseWidgets import RoundShadow
+from Ui.BaseWidgets import SmoothlyScrollArea
 from Ui.tools import add_line_breaks
 
 
