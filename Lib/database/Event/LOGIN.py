@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
-
+from typing import override
 
 from .ABC import Event
 from .ABC import GetUsers
@@ -36,6 +36,7 @@ class AckUserAndPassword(Event):
         self.username = username
         self.password = password
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         """
         :return: USER_NOT_FIND | WRONG_PASSWORD | LOGIN_SUCCESS

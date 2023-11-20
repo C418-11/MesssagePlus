@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
+from typing import override
 
 from .ABC import Event
 from .ABC import RegEvent
@@ -13,6 +14,7 @@ class DebugEvent(Event):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         print("DEBUG_EVENT(server={}, event={}, kwargs={})".format(server, self, _kwargs))
 

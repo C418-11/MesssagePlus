@@ -5,8 +5,13 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 from enum import IntEnum
-
-from AuthenticationSystem.Events.Base import Event, EventWithData, SuccessEvent, FailEvent
+from enum import StrEnum
+from typing import override
+from AuthenticationSystem.Events.Base import Event
+from AuthenticationSystem.Events.Base import EventWithData
+from AuthenticationSystem.Events.Base import SuccessEvent
+from AuthenticationSystem.Events.Base import FailEvent
+from Lib.base_conversion import Base
 
 
 class _AskData(Event):
@@ -19,10 +24,14 @@ ASK_DATA = _AskData
 class _AckData(EventWithData):
     Name = "Login.ACK_DATA"
 
-    def __init__(self, uuid, login_key, client_type):
+    class ClientType(StrEnum):
+        Client = "Client"
+        ChatServer = "ChatServer"
+
+    def __init__(self, uuid: Base, login_key: str, client_type: ClientType):
         self._uuid = uuid
         self._login_key = login_key
-        self._client_type = client_type
+        self._client_type = self.ClientType(client_type)
 
     @property
     def uuid(self):
@@ -37,9 +46,11 @@ class _AckData(EventWithData):
         return self._client_type
 
     @classmethod
+    @override
     def load(cls, _json):
         return cls(**_json[cls.Name])
 
+    @override
     def dump(self):
         return {
             self.Name: {
@@ -76,9 +87,11 @@ class _InvalidClientType(EventWithData, FailEvent):
         return self._need_type
 
     @classmethod
+    @override
     def load(cls, _json):
         return cls(**_json[cls.Name])
 
+    @override
     def dump(self):
         return {
             self.Name: {
@@ -101,7 +114,7 @@ SUCCESS = _LoginSuccess()
 class _LoginFailed(EventWithData, FailEvent):
     Name = "Login.LOGIN_FAILED"
 
-    class TYPE(IntEnum):
+    class FailType(IntEnum):
         UNKNOWN_SERVER_ERROR = -1
         NOTSET = 0
         INVALID_CLIENT_TYPE = 1
@@ -109,21 +122,23 @@ class _LoginFailed(EventWithData, FailEvent):
         FAILED_TO_ACQUIRE_DATA = 3
         INVALID_DATA = 4
 
-    def __init__(self, info=TYPE.NOTSET):
-        self._info = info
+    def __init__(self, type_=FailType.NOTSET):
+        self._type = self.FailType(type_)
 
     @property
-    def info(self):
-        return self._info
+    def type(self):
+        return self._type
 
     @classmethod
+    @override
     def load(cls, _json):
         return cls(**_json[cls.Name])
 
+    @override
     def dump(self):
         return {
             self.Name: {
-                "info": self._info,
+                "info": self._type,
             }
         }
 

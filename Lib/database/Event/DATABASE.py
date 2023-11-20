@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
+from typing import override
 
 from .ABC import Event
 from .ABC import RegEvent
@@ -14,6 +15,7 @@ class InitDataBase(Event):
         self.database_type = database_type
         self.name = name
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         server.DBs.add(server.databases[self.database_type](self.name, server.name))
 

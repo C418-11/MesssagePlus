@@ -6,6 +6,7 @@ __version__ = "0.1"
 
 import os
 from typing import Union
+from typing import override
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
@@ -148,6 +149,7 @@ class _Login(IO, LogMixin):
         return self.settings["timeout"]
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Serv/Server/Login/"
 
@@ -162,6 +164,7 @@ class _Client(IO, LogMixin):
         IO.__init__(self)
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Serv/Server/Client/"
 
@@ -176,6 +179,7 @@ class _ChatServer(IO, LogMixin):
         IO.__init__(self)
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Serv/Server/ChatServer/"
 
@@ -190,6 +194,7 @@ class _ClientPool(IO, LogMixin):
         IO.__init__(self)
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Serv/Server/ClientServicePool/"
 
@@ -204,6 +209,7 @@ class _ChatServerPool(IO, LogMixin):
         IO.__init__(self)
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Serv/Server/ChatServerServicePool/"
 

@@ -7,9 +7,9 @@ import socket
 import sys
 from numbers import Real
 from threading import Thread
-from typing import Union, Any
+from typing import Union, Any, override
 
-from AuthenticationSystem.Config.WebConfig import ServerConfig
+from AuthenticationSystem.Config.Server.WebConfig import ServerConfig
 from AuthenticationSystem.Serv.Base import ServicePoolTypes
 from Lib.SocketIO import Address
 from Lib.SocketIO import Server as SocketServer
@@ -76,37 +76,45 @@ class Server(SocketServer):
             pass
         sys.exit(0)
 
+    @override
     def start(self):
         super().start()
         self._serv_manager_thread.start()
         self.logger.info("[Server] Start!")
 
+    @override
     def bind(self, address: Union[Address, tuple[Any, ...], str, bytes]):
         self.logger.info(f"[Server] Bind addr (addr='{address}')")
         super().bind(address)
 
+    @override
     def listen(self, _backlog: int):
         self.logger.debug(f"[Server] Listen (backlog={_backlog})")
         super().listen(_backlog)
 
+    @override
     def stop(self):
         self.logger.info("[Server] Stop!")
         self._running = False
         super().stop()
 
+    @override
     def join(self, timeout=None):
         self._serv_manager_thread.join(timeout)
         super().join(timeout)
 
+    @override
     def restart(self, init_socket: Union[tuple, socket.socket]):
         """banned func, I don't think it's necessary to restart server"""
         raise AttributeError("Server can not restart!")
 
     @Disable
+    @override
     def get(*args, **kwargs):
         ...
 
     @Disable
+    @override
     def get_que(self):
         ...
 

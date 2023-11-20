@@ -5,8 +5,9 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 from threading import Thread
+from typing import override
 
-from AuthenticationSystem.Config.ServConfig import ServerConfig
+from AuthenticationSystem.Config.Server.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
@@ -48,6 +49,7 @@ class Client(ABCService, LoginMixin):
         ABCService.__init__(self, conn, addr)
         LoginMixin.__init__(self, self._cSocket, self.TYPE)
 
+    @override
     def start(self):
         self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
         try:
@@ -67,6 +69,7 @@ class ChatServer(ABCService, LoginMixin):
     def __init__(self, conn, addr, *_, **__):
         super().__init__(conn, addr)
 
+    @override
     def start(self):
         ...
 
@@ -80,6 +83,7 @@ class ClientServicePool(ABCServicePool):
     def __init__(self):
         self._client_pool = ThreadPool()
 
+    @override
     def add_service(self, conn: SocketIo, addr: Address, *args, **kwargs):
         self.logger.info(f"[ClientServicePool] Recv new request (addr='{addr}')")
 
@@ -103,6 +107,7 @@ class ChatServerServicePool(ABCServicePool):
     def __init__(self):
         self._chat_server_pool = ThreadPool()
 
+    @override
     def add_service(self, conn: SocketIo, addr: Address, *args, **kwargs):
         self.logger.info(f"[ChatServerServicePool] Recv new request (addr='{addr}')")
 

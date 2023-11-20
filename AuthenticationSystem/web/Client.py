@@ -3,7 +3,7 @@
 
 
 import socket
-from typing import Optional
+from typing import Optional, override
 from typing import Union
 
 from tqdm import tqdm
@@ -31,23 +31,22 @@ class Client(SocketIo):
         self.send_json(event.dump())
 
     @Disable
+    @override
     def send_obj(self, *args, **kwargs):
         pass
 
     @Disable
+    @override
     def recv_obj(self, *args, **kwargs):
         pass
 
 
-__all__ = ("Client",)
-
-
 def _main_():
     c = Client(Address("127.0.0.1", 32767))
-    initer = c.init("Client", 10)
-    print(initer)
-    print(next(initer))
-    print(next(initer))
+    init = c.init("Client", 10)
+    print(init)
+    print(next(init))
+    print(next(init))
     while True:
         try:
             print(c.recv())
@@ -78,3 +77,6 @@ def example():
 
 if __name__ == "__main__":
     example()
+
+
+__all__ = ("Client", "example")

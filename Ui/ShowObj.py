@@ -5,7 +5,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import os
-from typing import Union
+from typing import Union, override
 
 from PyQt5.QtCore import QSize, pyqtSignal, QPoint, Qt
 from PyQt5.QtGui import QFont
@@ -73,6 +73,7 @@ class File(QWidget):
 
         return pixmap
 
+    @override
     def resize(self, *args: Union[QSize, list[int, int]]) -> None:
         """
         resize(self, int, int) -> None

@@ -10,7 +10,7 @@ import traceback
 
 from tqdm import tqdm
 
-from AuthenticationSystem.Config.ServConfig import ServerConfig
+from AuthenticationSystem.Config.Server.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Events.Login import FAILED
 from AuthenticationSystem.Serv.Login.Database import LoginData
@@ -207,7 +207,7 @@ class LoginManager:
             self.login_logger.warn(
                 f"{log_head} An un except exception recv (exc='{type(err.__name__)}: {err}')"
             )
-            self._cSocket.send_json(Login.FAILED(FAILED.TYPE.INVALID_DATA).dump())
+            self._cSocket.send_json(Login.FAILED(FAILED.FailType.INVALID_DATA).dump())
             traceback.print_exception(err, file=sys.stderr)
 
         if not load_success:
@@ -221,7 +221,7 @@ class LoginManager:
                 f"{log_head} Lost Connect! (reason='{type(err).__name__}: {err}')"
             )
             try:
-                self._cSocket.send_json(Login.FAILED(FAILED.TYPE.FAILED_TO_ACQUIRE_DATA).dump())
+                self._cSocket.send_json(Login.FAILED(FAILED.FailType.FAILED_TO_ACQUIRE_DATA).dump())
             except ConnectionError:
                 pass
             self._cSocket.close()
@@ -231,7 +231,7 @@ class LoginManager:
             self.login_logger.error(
                 f"{log_head} Lost Connect! Unhandled exception occurred (reason={type(err).__name__}：{err})"
             )
-            self._cSocket.send_json(Login.FAILED(FAILED.TYPE.UNKNOWN_SERVER_ERROR).dump())
+            self._cSocket.send_json(Login.FAILED(FAILED.FailType.UNKNOWN_SERVER_ERROR).dump())
             self._cSocket.close()
             raise LostConnectError
 

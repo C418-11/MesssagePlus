@@ -8,6 +8,7 @@ import json
 from abc import ABC
 from abc import abstractmethod
 from typing import Self
+from typing import override
 
 
 class Event(ABC):
@@ -31,6 +32,7 @@ class EventWithData(Event):
 
     @classmethod
     @abstractmethod
+    @override
     def load(cls, *args) -> Self:
         ...
 
@@ -39,6 +41,7 @@ class EventWithData(Event):
         return cls.load(json.loads(txt))
 
     @abstractmethod
+    @override
     def dump(self) -> dict:
         ...
 

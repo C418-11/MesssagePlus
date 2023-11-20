@@ -5,6 +5,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import os.path
+from typing import override
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Progressbar import config_counter
@@ -36,6 +37,7 @@ class _Server(IO):
         return self.settings["max_connections"]
 
     @property
+    @override
     def BASE_DIR(self) -> str:
         return "./Server/"
 

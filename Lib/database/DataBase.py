@@ -16,6 +16,7 @@ from numbers import Integral
 from numbers import Real
 from threading import Thread
 from typing import TextIO
+from typing import override
 from typing import Type
 from typing import Union
 
@@ -52,6 +53,7 @@ class Store(ABCStore):
     def __init__(self, __store_path: str, database: ABCDataBase):
         super().__init__(__store_path, database)
 
+    @override
     def set_format(self, format_: NameList):
         if self.database.BinJsonReader(self.path + self.database.INFO_FILE)["format"] is not None:
             raise RuntimeError("Format has been set")
@@ -62,6 +64,7 @@ class Store(ABCStore):
 
         self.reload()
 
+    @override
     def append(self, line: NameList):
         if line in self.data:
             raise ValueError("Line already exists!")
@@ -69,6 +72,7 @@ class Store(ABCStore):
         self.history("append", {"line": line.ToDict()})
         self.save()
 
+    @override
     def search(self, keyword: str, value):
         ret = []
         for line in self.data:
@@ -81,6 +85,7 @@ class Store(ABCStore):
             return ret
         return []
 
+    @override
     def locate(self, line):
         last = 0
         lines = []
@@ -134,6 +139,7 @@ class DataBase(ABCDataBase):
                 self.log(msg=f"An error was raised while loading Store store_path={store_path} err={err}",
                          level=WARNING)
 
+    @override
     def create(self, __store_type, __store_name):
         store_path = self.store_path(__store_name)
 
@@ -172,6 +178,7 @@ class DataBase(ABCDataBase):
 
         self.stores.add(cls(store_path, self))
 
+    @override
     def log(self, msg: str, level, store: str = "SYSTEM"):
         time_ = time.strftime(self.time_format, time.localtime())
         message = self.log_format.format(time=time_, level=level, store=store, msg=msg)
@@ -290,6 +297,7 @@ class DataBaseServer(ABCServer):
 
         return Runner
 
+    @override
     def _file_input_loop(self):
         self.log(msg="Enter File Input", level=DEBUG)
 
@@ -321,6 +329,7 @@ class DataBaseServer(ABCServer):
 
         self.log(msg="Exit File Input", level=DEBUG)
 
+    @override
     def _serve(self, conn: SocketIo, name: str):
         conn_peer_name = conn.getpeername()
         self.log(msg=f"{name} Serve Start! name={name} conn={conn_peer_name}", level=INFO)
@@ -378,6 +387,7 @@ class DataBaseServer(ABCServer):
         self.log(msg=f"{name} Serve End! conn={conn_peer_name}", level=INFO)
         conn.close()
 
+    @override
     def _recv_loop(self):
         self.log(msg=f"Enter RecvLoop", level=DEBUG)
 
@@ -402,6 +412,7 @@ class DataBaseServer(ABCServer):
 
         self.log(msg=f"Exit RecvLoop", level=DEBUG)
 
+    @override
     def log(self, msg, level):
         level_name = logging.getWeightName(level=level)
         time_ = datetime.now().strftime(self.time_format)[:-4]
@@ -410,6 +421,7 @@ class DataBaseServer(ABCServer):
 
         self.logging.log(level=level, msg=message)  # 输出日志
 
+    @override
     def _start_thread(self):
         try:
             self.recv_thread.start()
@@ -424,6 +436,7 @@ class DataBaseServer(ABCServer):
             self.file_input_thread = Thread(target=self._file_input_loop, name=self.name + "'s File Input", daemon=True)
             self.file_input_thread.start()
 
+    @override
     def start(self):
         self.log(msg=f"Start!", level=INFO)
         self.running = True
@@ -431,12 +444,14 @@ class DataBaseServer(ABCServer):
 
         self._start_thread()
 
+    @override
     def stop(self):
         self.log(msg=f"Stop!", level=INFO)
         self.running = False
         self.server.stop()
         self.server.join(10)
 
+    @override
     def restart(self):
         self.log(msg=f"ReStart!", level=INFO)
         self.stop()
@@ -444,17 +459,21 @@ class DataBaseServer(ABCServer):
         self.server.restart(self.init_socket)
         self.start()
 
+    @override
     def join(self, timeout=None):
         self.recv_thread.join(timeout=timeout)
 
+    @override
     def bind(self, _address: Union[Address, tuple[str, int]]):
         self.log(msg=f"Bind address={_address}", level=INFO)
         self.server.bind(_address)
 
+    @override
     def listen(self, _backlog: int):
         self.log(msg=f"Listen backlog={_backlog}", level=DEBUG)
         self.server.listen(_backlog)
 
+    @override
     def is_alive(self):
         return self.running
 

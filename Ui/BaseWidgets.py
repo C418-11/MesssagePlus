@@ -9,7 +9,7 @@ from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from math import cos, pi
-from typing import Optional
+from typing import Optional, override
 
 from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint, QRectF
 from PyQt5.QtGui import QWheelEvent, QColor, QPainter, QPainterPath, QBrush
@@ -90,6 +90,7 @@ class RoundShadow(QWidget):
         pat2.drawRoundedRect(rect, self.radius.xRadius, self.radius.yRadius)
 
     @showException
+    @override
     def paintEvent(self, *args):
         if self.draw_shadow:
             self.shadow()
@@ -131,6 +132,7 @@ class SmoothlyScrollArea(QScrollArea):
         self.smoothMode = smooth_mode
 
     @showException
+    @override
     def wheelEvent(self, e):
         if self.smoothMode == SmoothMode.NO_SMOOTH:
             super().wheelEvent(e)

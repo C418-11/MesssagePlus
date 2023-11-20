@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
+from typing import override
 
 from .ABC import Event
 from .ABC import GetUsers
@@ -22,6 +23,7 @@ class RegUser(Event):
         self.username = username
         self.password = password
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         users = GetUsers(server=server)
         try:
@@ -47,6 +49,7 @@ class ReSetPassword(Event):
         self.username = username
         self.password = password
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         users = GetUsers(server=server)
 
@@ -67,6 +70,7 @@ class DelUser(Event):
     def __init__(self, username: str):
         self.username = username
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         users = GetUsers(server=server)
         if self.username not in users.keys():

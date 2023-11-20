@@ -4,6 +4,7 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+from typing import override
 
 from Lib.config.ConfigIO import IO
 from Lib.config.Mixin.LogMixin import LogMixin
@@ -18,6 +19,7 @@ class Server(IO, LogMixin):
         IO.__init__(self)
 
     @property
+    @override
     def BASE_DIR(self):
         return "./Web/Server/"
 

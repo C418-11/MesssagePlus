@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 import json
+from typing import override
 
 from .ABC import Event
 from .ABC import RegEvent
@@ -41,6 +42,7 @@ class CreateStore(StoreEvent):
         super().__init__(database_name, name)
         self.store_type = store_type
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         try:
             self.db_obj(server).create(self.store_type, self.store_name)
@@ -60,6 +62,7 @@ class SetStoreFormat(StoreEvent):
         super().__init__(database, store)
         self.format_ = format_
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         self.store_obj(server).set_format(self.format_)
 
@@ -75,6 +78,7 @@ class SetHistoryFormat(StoreEvent):
         super().__init__(database, store)
         self.format_ = format_
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         self.store_obj(server).set_history_format(self.format_)
 
@@ -90,6 +94,7 @@ class Append(StoreEvent):
         super().__init__(database, store)
         self.line = line
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         self.store_obj(server).append(self.line)
 
@@ -105,6 +110,7 @@ class GetLine(StoreEvent):
         super().__init__(database, store)
         self.index = index
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         return self.store_obj(server)[self.index]
 
@@ -121,6 +127,7 @@ class SetLine(StoreEvent):
         self.index = index
         self.line = line
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         self.store_obj(server)[self.index] = self.line.ToDict()
 
@@ -136,6 +143,7 @@ class DelLine(StoreEvent):
         super().__init__(database, store)
         self.index = index
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         del self.store_obj(server)[self.index]
 
@@ -151,6 +159,7 @@ class LocateLine(StoreEvent):
         super().__init__(database, store)
         self.line = line
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         return self.store_obj(server).locate(self.line)
 
@@ -167,6 +176,7 @@ class SearchLine(StoreEvent):
         self.keyword = keyword
         self.value = value
 
+    @override
     def func(self, server: ABCServer, **_kwargs):
         return self.store_obj(server).search(self.keyword, self.value)
 
