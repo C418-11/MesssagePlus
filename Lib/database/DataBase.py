@@ -69,15 +69,11 @@ class Store(ABCStore):
         self.history("append", {"line": line.ToDict()})
         self.save()
 
-    def search(self, keyword, value):
-        if type(keyword is str):
-            keyword = (keyword, )
+    def search(self, keyword: str, value):
         ret = []
         for line in self.data:
-            for path in keyword[:-1]:
-                line = line[path]
             try:
-                if line[keyword[-1]] == value:
+                if line[keyword] == value:
                     ret.append(self.format(line))
             except KeyError:
                 return STORE.KEY_NOT_FIND

@@ -16,6 +16,7 @@ from threading import Thread
 from typing import Any
 from typing import Tuple
 from typing import Union
+from typing import Optional
 
 
 class Address:
@@ -73,7 +74,7 @@ class Recv:
     def put(self, obj):
         return self.data.append(obj)
 
-    def get(self, timeout: Union[Real, None] = float("inf")):
+    def get(self, timeout: Optional[Real] = float("inf")):
         start_time = time.time()
 
         timeout = float(timeout)
@@ -146,7 +147,7 @@ class SocketIo:
         self._running = False
         self._recv_t = Thread(target=self._recv_loop, name="SocketIO.SocketIO.RecvThread", daemon=True)
 
-    def _recv_all(self, max_size: Integral = None) -> bytes:
+    def _recv_all(self, max_size: Optional[Integral] = None) -> bytes:
         if max_size is None:
             max_size = 4096
 
@@ -203,13 +204,13 @@ class SocketIo:
     def stop_recv(self):
         self._running = False
 
-    def recv(self, max_size: int = None) -> bytes:
+    def recv(self, max_size: Optional[int] = None) -> bytes:
         if self._recv_t.is_alive():
             raise threading.ThreadError("Recv Thread is alive!")
 
         return self._recv_all(max_size=max_size)
 
-    def recv_obj(self, max_size: int = None):
+    def recv_obj(self, max_size: Optional[int] = None):
         return pickle.loads(self.recv(max_size=max_size))
 
     def get_que(self):
@@ -222,7 +223,7 @@ class SocketIo:
         self._cSocket.sendall(struct.pack('i', size_of))
         self._cSocket.sendall(byte)
 
-    def send_json(self, _json: Union[list, tuple, str, dict, set, bool, None], encode="utf-8"):
+    def send_json(self, _json: Optional[Union[list, tuple, str, dict, set, bool]], encode="utf-8"):
         txt = json.dumps(_json)
         byte = txt.encode(encode)
         self.send(byte)
@@ -234,13 +235,13 @@ class SocketIo:
     def close(self):
         self._cSocket.close()
 
-    def join(self, timeout=None):
+    def join(self, timeout: Optional[float] = None):
         self._recv_t.join(timeout=timeout)
 
     def gettimeout(self):
         return self._cSocket.gettimeout()
 
-    def settimeout(self, value):
+    def settimeout(self, value: Optional[float]):
         self._cSocket.settimeout(value)
 
     def getpeername(self):
@@ -308,7 +309,7 @@ class Server:
     def is_alive(self):
         return self._recv_connect_thread.is_alive()
 
-    def join(self, timeout=None):
+    def join(self, timeout: Optional[float] = None):
         self._recv_connect_thread.join(timeout=timeout)
 
     def restart(self, init_socket: Union[tuple, socket.socket]):

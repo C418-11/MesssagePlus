@@ -4,6 +4,7 @@
 
 import socket
 from typing import Union
+from typing import Optional
 
 from tqdm import tqdm
 
@@ -17,15 +18,24 @@ class Client(SocketIo):
     def __init__(self, address: Union[Address, socket.socket], print_error: bool = True):
         super().__init__(address=address, print_error=print_error)
 
+    def init(self, service_type, timeout: Optional[float]):
+        old_timeout = self.gettimeout()
+        self.settimeout(timeout)
+        self.send_json({"type": service_type})
+        yield self.recv()
+        self.send_event(ACK_DATA("abc", "lk!", "Client"))
+        yield self.recv()
+        self.settimeout(old_timeout)
+
     def send_event(self, event):
         self.send_json(event.dump())
 
     @Disable
-    def send_obj(self, obj):
+    def send_obj(self, *args, **kwargs):
         pass
 
     @Disable
-    def recv_obj(self, byte: bytes):
+    def recv_obj(self, *args, **kwargs):
         pass
 
 
@@ -34,13 +44,13 @@ __all__ = ("Client",)
 
 def _main_():
     c = Client(Address("127.0.0.1", 32767))
-    c.settimeout(10)
-    c.send_json({"type": "Client"})
-    c.recv()
-    c.send_event(ACK_DATA("Client's name", "lk!", "Client"))
+    initer = c.init("Client", 10)
+    print(initer)
+    print(next(initer))
+    print(next(initer))
     while True:
         try:
-            c.recv()
+            print(c.recv())
         except (TimeoutError, ConnectionError, EOFError):
             break
     c.close()
@@ -54,7 +64,7 @@ def example():
         desc="Loop",
     )
 
-    loop_times = 10000
+    loop_times = 1
 
     t.reset(loop_times)
 

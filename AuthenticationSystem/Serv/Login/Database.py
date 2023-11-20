@@ -4,7 +4,10 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-from typing import TextIO, Union
+from numbers import Real
+from typing import TextIO
+from typing import Self
+from typing import Optional
 
 from Lib.SocketIO import Address
 from Lib.database import logging
@@ -13,14 +16,28 @@ from Lib.database.DataBase import DataBaseServer
 
 
 class LoginData(NameList):
-    def __init__(self, name, login_key):
-        super().__init__(name=name, login_key=login_key)
+    def __init__(self, uuid: Optional[str], login_key: Optional[str]) -> None:
+        super().__init__(uuid=uuid, login_key=login_key)
 
-    name: str
+    uuid: str
     login_key: str
 
-    def ToNamelist(self):
-        return NameList(name=self.name, login_key=self.login_key)
+    def ToNamelist(self) -> NameList:
+        return NameList(uuid=self.uuid, login_key=self.login_key)
+
+    def empty(self) -> Self:
+        return type(self)(None, None)
+
+    def is_empty(self) -> bool:
+        if self.uuid is None or self.login_key is None:
+            return True
+        return False
+
+    def __eq__(self, other) -> bool:
+        try:
+            return self.uuid == other.uuid and self.login_key == other.login_key
+        except AttributeError:
+            return NotImplemented
 
 
 def build_database(
@@ -28,7 +45,7 @@ def build_database(
         name: str,
         address: Address,
         max_connections: int,
-        log_level: Union[str, float],
+        log_level: Real,
         input_file: TextIO,
         enable_log: bool,
         log_file: TextIO,

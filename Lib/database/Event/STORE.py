@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
-from typing import Union
+import json
 
 from .ABC import Event
 from .ABC import RegEvent
@@ -9,6 +9,7 @@ from ..ABC import ABCDataBase
 from ..ABC import ABCServer
 from ..ABC import ABCStore
 from ..ABC import NameList
+from ..logging import ERROR
 
 
 class StoreEvent(Event):
@@ -25,6 +26,13 @@ class StoreEvent(Event):
         return db_obj[self.store_name]
 
 
+class BrokenDatabase(RunFailed):
+    raw = "STORE.BROKEN_DATABASE"
+
+
+BROKEN_DATABASE = BrokenDatabase()
+
+
 @RegEvent
 class CreateStore(StoreEvent):
     raw = "STORE.CREATE_STORE"
@@ -34,7 +42,11 @@ class CreateStore(StoreEvent):
         self.store_type = store_type
 
     def func(self, server: ABCServer, **_kwargs):
-        self.db_obj(server).create(self.store_type, self.store_name)
+        try:
+            self.db_obj(server).create(self.store_type, self.store_name)
+        except json.JSONDecodeError:
+            server.log("DATABASE IS BROKEN", ERROR)
+            return BROKEN_DATABASE
 
 
 CREATE = CreateStore
@@ -150,7 +162,7 @@ LOCATE = LocateLine
 class SearchLine(StoreEvent):
     raw = "STORE.SEARCH_LINE"
 
-    def __init__(self, database, store, keyword: Union[str, tuple[str]], value):
+    def __init__(self, database, store, keyword: str, value):
         super().__init__(database, store)
         self.keyword = keyword
         self.value = value

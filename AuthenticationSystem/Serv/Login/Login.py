@@ -18,6 +18,7 @@ from AuthenticationSystem.Serv.Login.Database import build_database
 from Lib.SocketIO import SocketIo
 from Lib.config import Progressbar
 from Lib.config import tools as cf_tools
+from Lib.database.ABC import NameList
 from Lib.database.DataBase import DataBaseClient
 from Lib.database.Event import DATABASE
 from Lib.database.Event import LOGIN
@@ -140,9 +141,10 @@ def _init_database():
         _login_logger.debug(f"{log_head} Recv return value from DBServer (ret='{ret}')")
         if not isinstance(ret, RunSuccess):
             _login_logger.warn(
-                f"{log_head} Return value is not instance of RUN_SUCCESS #may failed "
-                f"(ret='{repr(ret)}')"
+                f"{log_head} Return value is not instance of RUN_SUCCESS program about to exit #may failed "
+                f"(event='{repr(event)}' ret='{repr(ret)}')"
             )
+            raise ValueError("Return value is not instance of RUN_SUCCESS #check the log for details")
         else:
             _login_logger.debug(
                 f"{log_head} Successfully execute event (ret='{ret}')"
@@ -238,7 +240,18 @@ class LoginManager:
         return data, client
 
     def _find_user_in_db(self, uuid):
-        self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
+        ls = self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
+        ls: list[NameList]
+
+        ret = []
+        for data in ls:
+            dict_ = data.ToDict()
+            try:
+                ret.append(LoginData(**dict_))
+            except TypeError:
+                self.login_logger.warn(f"[LoginManager] Data that cannot be parsed (data='{dict_}')")
+
+        return ret
 
 
 __all__ = ("LoginDatabaseFailedError", "LostConnectError", "LoginManager")

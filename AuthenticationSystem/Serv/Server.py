@@ -7,6 +7,7 @@ __version__ = "0.1"
 from threading import Thread
 
 from AuthenticationSystem.Config.ServConfig import ServerConfig
+from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
@@ -28,9 +29,9 @@ class LoginMixin(LoginManager):
     def __init__(self, socket: SocketIo, store: str):
         LoginManager.__init__(self, socket, store)
 
-    def login(self, addr):
-
-        self._find_user_in_db(...)  # todo
+    def login(self):
+        print(self._find_user_in_db(self.userdata.uuid))  # todo
+        self._cSocket.send_json(Login.SUCCESS.dump())
         # warn todo
         # 从数据库中查找是否有登录数据
         # 如果查找到并且匹配就直接登录
@@ -50,7 +51,7 @@ class Client(ABCService, LoginMixin):
     def start(self):
         self.logger.debug(f"[{self.TYPE}] Start (addr='{self._address}')")
         try:
-            self.login(self._address)
+            self.login()
         except LoginFailed:
             pass
         self._cSocket.close()

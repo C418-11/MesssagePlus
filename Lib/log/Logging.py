@@ -3,6 +3,7 @@
 
 import sys
 from datetime import datetime
+from threading import Thread
 
 from Lib.global_thread_lock import ProcessLock
 from Lib.log import Level
@@ -35,16 +36,16 @@ class Logger:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
     @lock
-    def log(self, level, text):
+    def log_in_thread(self, level, text, file):
         if level.weight >= self._output_level.weight:
             txt = self._format(self._format_time(), level, text)
-            self._file.write(txt)
+            file.write(txt)
 
-    @lock
+    def log(self, level, text):
+        Thread(target=self.log_in_thread, args=(level, text, self._file), daemon=True).start()
+
     def log_warn(self, level, text):
-        if level.weight >= self._output_level.weight:
-            txt = self._format(self._format_time(), level, text)
-            self._warn_file.write(txt)
+        Thread(target=self.log_in_thread, args=(level, text, self._warn_file), daemon=True).start()
 
     def debug(self, text):
         self.log(level=Level.DEBUG, text=text)
