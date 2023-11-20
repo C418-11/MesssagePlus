@@ -79,7 +79,7 @@ class Store(ABCStore):
                 return STORE.KEY_NOT_FIND
         if ret:
             return ret
-        return [copy.deepcopy(self.format)]
+        return []
 
     def locate(self, line):
         last = 0
