@@ -7,10 +7,11 @@ __version__ = "0.1"
 from enum import IntEnum
 from enum import StrEnum
 from typing import override
+
 from AuthenticationSystem.Events.Base import Event
 from AuthenticationSystem.Events.Base import EventWithData
-from AuthenticationSystem.Events.Base import SuccessEvent
 from AuthenticationSystem.Events.Base import FailEvent
+from AuthenticationSystem.Events.Base import SuccessEvent
 from Lib.base_conversion import Base
 
 

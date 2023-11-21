@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
-"""
-May this file will help you to do st :D
-"""
-import copy
+
 import pickle
 import socket
 import sys
@@ -16,9 +13,9 @@ from numbers import Integral
 from numbers import Real
 from threading import Thread
 from typing import TextIO
-from typing import override
 from typing import Type
 from typing import Union
+from typing import override
 
 from ..database import logging
 from ..database.ABC import ABCDataBase
