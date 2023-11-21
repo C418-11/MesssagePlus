@@ -274,7 +274,8 @@ class DataBaseServer(ABCServer):
                 return_code = EventToFunc(event, self, True)
             except Exception as err:
                 self.log(
-                    msg=f"{name}An error occurred while executing the event request! err_type={type(err)} err={err}",
+                    msg=f"{name}An error occurred while executing the event request!"
+                        f" err_type={type(err).__name__} err={err}",
                     level=WARNING)
                 rollback_stack.pop()
                 if self.debug:
@@ -321,7 +322,8 @@ class DataBaseServer(ABCServer):
                 ret = eval(line)
                 self.log(msg=f"A new line was executed from the stream ret_code={ret}", level=INFO)
             except Exception as err:
-                self.log(f"An error was thrown while running a line in the flow err_type={type(err)} err={err}",
+                self.log(f"An error was thrown while running a line in the flow"
+                         f" err_type={type(err).__name__} err={err}",
                          level=WARNING)
 
         self.log(msg="Exit File Input", level=DEBUG)
@@ -355,7 +357,10 @@ class DataBaseServer(ABCServer):
             except OSError:
                 pass
             self.log(
-                msg=f"{name} An unknown error was thrown during login! err_type={type(err)} err={err}", level=WARNING)
+                msg=f"{name} An unknown error was thrown during login!"
+                    f" err_type={type(err).__name__} err={err}",
+                level=WARNING
+            )
 
         event_runner = self._EventRunnerMaker(name=name)
 

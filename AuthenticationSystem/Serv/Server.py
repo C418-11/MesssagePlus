@@ -31,7 +31,7 @@ class LoginMixin(LoginManager):
         LoginManager.__init__(self, socket, store)
 
     def login(self):
-        print(self._find_user_in_db(self.userdata.uuid))  # todo
+        # print(self._find_user_in_db(self.userdata.uuid))  # todo
         self._cSocket.send_json(Login.SUCCESS.dump())
         # warn todo
         # 从数据库中查找是否有登录数据
@@ -47,7 +47,14 @@ class Client(ABCService, LoginMixin):
 
     def __init__(self, conn, addr, *_, **__):
         ABCService.__init__(self, conn, addr)
-        LoginMixin.__init__(self, self._cSocket, self.TYPE)
+        try:
+            LoginMixin.__init__(self, self._cSocket, self.TYPE)
+        except (ConnectionError, TimeoutError) as err:
+            self.logger.info(
+                f"[{self.TYPE}] LostConnect"
+                f" (addr='{self._address}', reason='{type(err).__name__}: {err}')"
+            )
+            raise
 
     @override
     def start(self):

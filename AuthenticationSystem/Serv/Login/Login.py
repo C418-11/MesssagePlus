@@ -198,11 +198,11 @@ class LoginManager:
         except (ConnectionResetError, TimeoutError, EOFError) as err:
             # 这些错误发生大概率是连接直接断了, 所以没必要发送LOGIN FAILED事件
             self.login_logger.info(
-                f"{log_head} Lost Connect (addr='{addr}' reason='{type(err).__name__}: {err}')"
+                f"{log_head} Lost Connect #during wait Login.ACK_DATA (addr='{addr}' reason='{type(err).__name__}: {err}')"
             )
         except Exception as err:
             self.login_logger.warn(
-                f"{log_head} An un except exception recv (exc='{type(err.__name__)}: {err}')"
+                f"{log_head} An un except exception recv #during wait Login.ACK_DATA (exc='{type(err.__name__)}: {err}')"
             )
             self._cSocket.send_json(Login.FAILED(FAILED.FailType.INVALID_DATA).dump())
             traceback.print_exception(err, file=sys.stderr)
@@ -215,7 +215,7 @@ class LoginManager:
             client = self._init_db_client()
         except LoginDatabaseFailedError as err:
             self.login_logger.warn(
-                f"{log_head} Lost Connect! (reason='{type(err).__name__}: {err}')"
+                f"{log_head} Unable to connect to database! (reason='{type(err).__name__}: {err}')"
             )
             try:
                 self._cSocket.send_json(Login.FAILED(FAILED.FailType.FAILED_TO_ACQUIRE_DATA).dump())
@@ -226,7 +226,8 @@ class LoginManager:
 
         except Exception as err:
             self.login_logger.error(
-                f"{log_head} Lost Connect! Unhandled exception occurred (reason={type(err).__name__}：{err})"
+                f"{log_head} Unable to connect to database! Unhandled exception occurred!"
+                f" (reason={type(err).__name__}：{err})"
             )
             self._cSocket.send_json(Login.FAILED(FAILED.FailType.UNKNOWN_SERVER_ERROR).dump())
             self._cSocket.close()

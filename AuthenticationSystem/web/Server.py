@@ -11,6 +11,7 @@ from typing import Union, Any, override
 
 from AuthenticationSystem.Config.Server.WebConfig import ServerConfig
 from AuthenticationSystem.Serv.Base import ServicePoolTypes
+from AuthenticationSystem.Serv.Login.Login import LostConnectError
 from Lib.SocketIO import Address
 from Lib.SocketIO import Server as SocketServer
 from Lib.SocketIO import SocketIo
@@ -56,19 +57,34 @@ class Server(SocketServer):
     def _serv_classify(self, conn: SocketIo, addr: Address, uuid):
         conn_timeout = conn.gettimeout()
         conn.settimeout(10)
+
+        log_head = "[ServManager.ClassifyThread]"
+
         try:
             byte_data = conn.recv()
-        except ConnectionError:
-            self.logger.warn(f"[ServManager] Lost connect! #during wait client type (addr={addr})")
+        except (ConnectionError, TimeoutError, EOFError):
+            self.logger.info(f"{log_head} Lost connect! #during wait client type (addr={addr})")
             conn.close()
-            sys.exit()
+            sys.exit(1)
         conn.settimeout(conn_timeout)
 
         byte_data: bytes
         js = byte_data.decode(encoding="utf-8")
         data = json.loads(js)
+        success_add_serv = False
+        try:
+            ServicePoolTypes[data["type"]].add_service(conn, addr, data)
+            success_add_serv = True
+        except LostConnectError:
+            self.logger.info(f"{log_head} Adding service failed # Lost connect (addr={addr})")
+        except Exception as err:
+            self.logger.warn(f"{log_head} Adding service failed "
+                             f"# An uncaught error was encountered: "
+                             f"(err={type(err).__name__}: {err}, addr={addr})")
 
-        ServicePoolTypes[data["type"]].add_service(conn, addr, data)
+        if not success_add_serv:
+            conn.close()
+            sys.exit(1)
 
         try:  # 这玩意里面是弱引用字典，找不到 是正常的
             self._classifying_serv_pool.remove(uuid)
