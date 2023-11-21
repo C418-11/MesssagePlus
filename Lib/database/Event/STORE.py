@@ -197,7 +197,6 @@ class LineNotFind(RunFailed):
 
 LINE_NOT_FIND = LineNotFind()
 
-
 __all__ = (
     "CREATE",
     "SET_FORMAT",

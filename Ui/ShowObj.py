@@ -43,7 +43,7 @@ class File(QWidget):
         self.resize_event.connect(self.resize_child)
 
     def refresh_file_name_label(self):
-        self.file_name_label.move(self.pos() + QPoint(0, self.height()-self.file_name_height))
+        self.file_name_label.move(self.pos() + QPoint(0, self.height() - self.file_name_height))
         self.file_name_label.setFont(self.font())
 
         self.setText(elidedText(self.fileName(), self.font(), self.width()))
@@ -69,7 +69,7 @@ class File(QWidget):
 
     def getFileImage(self, file_path):
 
-        pixmap = getFileImage(file_path, QSize(self.width(), self.height()-self.file_name_height))
+        pixmap = getFileImage(file_path, QSize(self.width(), self.height() - self.file_name_height))
 
         return pixmap
 
@@ -90,4 +90,4 @@ class File(QWidget):
         self.resize_event.emit(qsize)
 
 
-__all__ = ("File", )
+__all__ = ("File",)

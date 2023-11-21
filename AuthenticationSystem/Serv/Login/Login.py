@@ -4,7 +4,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-
 import sys
 import traceback
 
@@ -159,7 +158,6 @@ def _init_database():
 
 Progressbar.close()
 
-
 if _DBConfig.AutoInit.init_database:
     _init_database()
 
@@ -170,7 +168,6 @@ class LostConnectError(ConnectionError):
 
 
 class LoginManager:
-
     login_Config = _Config
     TIMEOUT = login_Config.timeout
     login_logger = _login_logger

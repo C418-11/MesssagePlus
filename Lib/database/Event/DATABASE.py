@@ -22,4 +22,4 @@ class InitDataBase(Event):
 
 INIT = InitDataBase
 
-__all__ = ("INIT", )
+__all__ = ("INIT",)

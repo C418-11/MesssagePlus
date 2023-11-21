@@ -87,7 +87,6 @@ _LoadBaseLoggerConfig()
 
 
 class IO(ABC, BaseIO):
-
     _logger = Logging.Logger(**logger_args)
     DEFAULT_FILES = None
 

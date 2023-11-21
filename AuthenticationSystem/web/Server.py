@@ -119,4 +119,4 @@ class Server(SocketServer):
         ...
 
 
-__all__ = ("Server", )
+__all__ = ("Server",)

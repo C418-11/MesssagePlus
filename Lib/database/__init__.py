@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.0.7 R"
+__version__ = "0.0.0.8 R"
 
 # 版本名称规则
 # R 正式版
@@ -14,7 +14,6 @@ __version__ = "0.0.0.7 R"
 DataBase Lib
 
 """
-
 
 import sys
 
@@ -34,7 +33,6 @@ if ver_info < __RUN_VERSION:
     raise ImportError("Python version Error (at lease {0} now {1})".format(__RUN_VERSION, ver_info))
 
 __all__ = ("ABC", "DataBase", "Event", "logging", "SocketIO")
-
 
 if __name__ == '__main__':
     pass

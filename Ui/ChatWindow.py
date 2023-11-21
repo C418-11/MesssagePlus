@@ -85,7 +85,7 @@ class Message(RoundShadow, QWidget):
 
         min_height = self.time_label.height() + self.username_label.height() + self.message.height()
         self.setMinimumHeight(min_height)
-        self.background_rect = QRect(self.x(), self.y(), width-10, min_height)
+        self.background_rect = QRect(self.x(), self.y(), width - 10, min_height)
 
     class TimeLabel(QLabel):
         def __init__(self, parent: QWidget, /, *, time_stamp: float, width: int, font: QFont) -> None:
@@ -130,7 +130,7 @@ class Message(RoundShadow, QWidget):
             super().__init__(parent)
             self.setObjectName("ShowMessage")
             self.raw_message = message
-            self.size_width = width-50
+            self.size_width = width - 50
 
             if font is not None:
                 self.setFont(font)
@@ -165,7 +165,7 @@ class UIChatWindow(object):
         self.MessageLayout.addWidget(msg_obj)
         self.MessageLayout.setStretchFactor(msg_obj, 12)
         self.MessageLayout.setSpacing(spacing)
-        self.MessageLayout.setStretch(next(self.count_message)-1, 1)
+        self.MessageLayout.setStretch(next(self.count_message) - 1, 1)
         self.messages[message_data.message_uuid] = msg_obj
 
     def setupUi(self):
@@ -182,8 +182,8 @@ class UIChatWindow(object):
         self.MessageArea.setObjectName("MessageArea")
 
         self.MessageScrollContents = QWidget(self.MessageScrollContents)
-        self.MessageScrollContents.setMaximumWidth(self.MessageArea.width()-2)
-        self.MessageScrollContents.setMinimumWidth(self.MessageArea.width()-2)
+        self.MessageScrollContents.setMaximumWidth(self.MessageArea.width() - 2)
+        self.MessageScrollContents.setMinimumWidth(self.MessageArea.width() - 2)
         self.MessageScrollContents.setObjectName("MessageScrollContents")
 
         self.MessageLayout = QVBoxLayout(self.MessageScrollContents)

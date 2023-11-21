@@ -15,7 +15,6 @@ MAX_BASE = len(DIGITS)
 
 
 def check_value(base=None, type_="self", index=0):
-
     def wrapper(func):
         nonlocal type_, index, base
         if type_ == "self":
@@ -134,7 +133,7 @@ class Base:
         while n > 0:
             result = cls._DIGITS[int(n % to)] + result
             n = n // to
-        return cls(result,  int(to))
+        return cls(result, int(to))
 
     def __len__(self) -> int:
         return len(self._value)
@@ -296,7 +295,7 @@ class Base:
         if self._value == self.from_int(0, self._BASE) or other == other.from_int(0, other.base):
             raise ZeroDivisionError("division by zero")
         x = self // other
-        result = self - (x*other)
+        result = self - (x * other)
         return result
 
     @check_value()
@@ -375,6 +374,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 __all__ = ("MAX_LEN", "MAX_BASE", "DIGITS", "Base")

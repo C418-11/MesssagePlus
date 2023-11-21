@@ -21,4 +21,4 @@ class DebugEvent(Event):
 
 DEBUG = DebugEvent
 
-__all__ = ("DEBUG", )
+__all__ = ("DEBUG",)

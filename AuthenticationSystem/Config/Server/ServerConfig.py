@@ -44,5 +44,4 @@ class _Server(IO):
 
 Server = _Server()
 
-
-__all__ = ("Server", )
+__all__ = ("Server",)

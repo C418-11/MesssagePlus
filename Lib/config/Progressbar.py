@@ -9,13 +9,12 @@ from Lib.global_thread_lock import OutputLock
 TOTAL_CONFIG_FILE = 0
 
 ProgressBar = tqdm(
-        total=-1,
-        leave=True,
-        unit="file",
-        desc="ConfigFiles",
-        file=sys.stdout,
+    total=-1,
+    leave=True,
+    unit="file",
+    desc="ConfigFiles",
+    file=sys.stdout,
 )
-
 
 ProgressBar.set_lock(OutputLock)
 
@@ -52,6 +51,7 @@ def config_counter(__cls=None, *, count: int = None):
                                  f" (num: {num}, count: {count})")
             elif count != num:
                 set_max(num)
+
         cls.check_count = check_count
 
         global TOTAL_CONFIG_FILE
@@ -80,6 +80,7 @@ def config_counter(__cls=None, *, count: int = None):
         def decorator(cls):
             _add_count(cls)
             return cls
+
         return decorator
 
     _add_count(__cls)

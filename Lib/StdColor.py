@@ -13,6 +13,7 @@ class ColorWrite:
     """
     Output to the specified color
     """
+
     def __init__(self, super_, font_color=None, bg_color=None):
         colorama.init()
         self.super_ = super_
@@ -41,6 +42,5 @@ class ColorWrite:
 
 sys.stdout = ColorWrite(sys.__stdout__, None)
 sys.stderr = ColorWrite(sys.__stderr__, colorama.Fore.RED)
-
 
 __all__ = ("ColorWrite",)

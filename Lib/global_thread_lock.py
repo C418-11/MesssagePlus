@@ -4,9 +4,7 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-
 import threading
-
 
 OutputLock = threading.RLock()
 
@@ -43,6 +41,7 @@ class ProcessLock:
                 return func(*args, **kwargs)
             finally:
                 self.lock.release()
+
         return wrapper
 
 

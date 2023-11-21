@@ -83,7 +83,6 @@ class DelUser(Event):
 
 DEL = DelUser
 
-
 __all__ = (
     "USER_NOT_FIND",
     "WRONG_PASSWORD",
