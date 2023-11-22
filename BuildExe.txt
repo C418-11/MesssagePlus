@@ -1,0 +1,2 @@
+pyinstaller.exe Server.spec --clean
+pyinstaller.exe ./AuthenticationSystem/Server.py -D -d noarchive --clean --hiddenimport AuthenticationSystem.Serv.Server

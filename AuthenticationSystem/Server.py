@@ -4,8 +4,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-# pyinstaller.exe ./AuthenticationSystem/Server.py -D -d noarchive --clean
-
 
 from AuthenticationSystem.Config.Server import ServerConfig
 from Lib.SocketIO import Address
