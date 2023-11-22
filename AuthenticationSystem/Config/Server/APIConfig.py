@@ -20,7 +20,8 @@ class _Verification(IO):
                 "data": {
                     "smtp_addr": ("smtp.163.com", 25),
                     "api_user": None,
-                    "api_password": None
+                    "api_password": None,
+                    "email_template": "./Resource/AuthenticationServer/EmailTemplate.html"
                 }
             }
         }
@@ -33,13 +34,19 @@ class _Verification(IO):
     @property
     def userEmail(self) -> str:
         api_user = self.settings["api_user"]
+
         if isinstance(api_user, str):
-            api_user.lower()
+            api_user = api_user.lower()
+
         return api_user
 
     @property
     def userPassword(self) -> str:
         return self.settings["api_password"]
+
+    @property
+    def emailTemplate(self) -> str:
+        return self.settings["email_template"]
 
     @property
     @override

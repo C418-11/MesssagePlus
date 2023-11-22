@@ -7,7 +7,9 @@ __version__ = "0.1"
 
 import random
 import smtplib
+import time
 import uuid
+from datetime import datetime
 
 from email.header import Header
 from email.mime.text import MIMEText
@@ -28,7 +30,8 @@ if not config.userEmail or not config.userPassword:
 
 
 def verificationSender(recv: str):
-    code = str(uuid.uuid3(uuid.NAMESPACE_DNS, recv))
+    time_str = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S.%f")
+    code = str(uuid.uuid3(uuid.NAMESPACE_DNS, f"{recv}{time_str}"))
     code = random.choices(code, k=6)
 
     for x in range(len(code)):
@@ -37,7 +40,7 @@ def verificationSender(recv: str):
 
     code_str = ''.join(code)
 
-    with open(r"F:\Message_Plus\Resource\AuthenticationServer\EmailTemplate.html", "r", encoding="utf-8") as f:
+    with open(config.emailTemplate, "r", encoding="utf-8") as f:
         msg_str = f.read()
 
     msg_str = msg_str.replace("{{captcha_text}}", code_str)
