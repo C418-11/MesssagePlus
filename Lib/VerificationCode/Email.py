@@ -18,6 +18,15 @@ from AuthenticationSystem.Config.Server import APIConfig
 config = APIConfig.Verification
 
 
+class APIUserPasswordNotConfigured(ValueError):
+    def __str__(self):
+        return "The API user or password is not configured"
+
+
+if not config.userEmail or not config.userPassword:
+    raise APIUserPasswordNotConfigured()
+
+
 def verificationSender(recv: str):
     code = str(uuid.uuid3(uuid.NAMESPACE_DNS, recv))
     code = random.choices(code, k=6)

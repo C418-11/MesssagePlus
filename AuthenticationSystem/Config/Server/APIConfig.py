@@ -32,7 +32,10 @@ class _Verification(IO):
 
     @property
     def userEmail(self) -> str:
-        return self.settings["api_user"].lower()
+        api_user = self.settings["api_user"]
+        if isinstance(api_user, str):
+            api_user.lower()
+        return api_user
 
     @property
     def userPassword(self) -> str:

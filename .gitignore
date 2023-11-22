@@ -10,5 +10,6 @@ dist
 # resource dir
 font
 # runtime dir
+configs-backup
 configs
 DataBases

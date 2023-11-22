@@ -14,7 +14,7 @@ from Ui.ChatWindow import UIChatWindow, MessageData
 from Ui.tools import showException
 
 
-def main():
+def chat_window():
     app = QApplication(sys.argv)
     window = QMainWindow()
     ui = UIChatWindow(window)
@@ -31,6 +31,10 @@ def main():
 
     window.show()
     sys.exit(app.exec_())
+
+
+def main():
+    pass
 
 
 if __name__ == "__main__":
