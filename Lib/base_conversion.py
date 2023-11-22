@@ -35,7 +35,7 @@ def check_value(base=None, type_="self", index=0):
                     return func(self, *args, **kwargs)
 
                 elif any([isinstance(value, x) for x in (float, int)]):
-                    value = cls.from_int(value, base)
+                    value = cls.fromInt(value, base)
                 elif isinstance(value, str):
                     value = cls(value, base)
                 else:
@@ -89,7 +89,7 @@ class Base:
         return self._BASE
 
     @classmethod
-    def from_int(cls, n: int, base) -> Self:
+    def fromInt(cls, n: int, base) -> Self:
         if n == 0:
             return cls(cls._DIGITS[0], base)
 
@@ -110,8 +110,28 @@ class Base:
 
         return cls(s, base)
 
+    def toInt(self):
+        return int(self)
+
+    def toIndexList(self) -> list[int]:
+        return [self._DIGITS.index(x) for x in self._value]
+
+    def toString(self) -> str:
+        return str(self)
+
+    def toDict(self) -> dict[str, Union[str, int]]:
+        return {"value": self._value, "base": self._BASE}
+
     @classmethod
-    def from_index_ls(cls, index_ls: list[int], to: int) -> Self:
+    def fromDict(cls, _dict: dict[str, Union[str, int]]) -> Self:
+        return cls(_dict["value"], _dict["base"])
+
+    @classmethod
+    def fromString(cls, txt: str, to: int) -> Self:
+        return cls(txt, to)
+
+    @classmethod
+    def fromIndexList(cls, index_ls: list[int], to: int) -> Self:
         txt = []
         for i in index_ls:
             if i == '-':
@@ -121,19 +141,19 @@ class Base:
         return cls(''.join(reversed(txt)), to)
 
     @classmethod
-    def dec_to(cls, n: "Base", to: int) -> Self:
-        if n.base != 10:
+    def decToBase(cls, dec: "Base", to_base: int) -> Self:
+        if dec.base != 10:
             raise ValueError(f"n's base is not 10")
 
-        to = cls.from_int(to, 10)
-        if to == cls.from_int(10, 10):
-            return n
+        to_base = cls.fromInt(to_base, 10)
+        if to_base == cls.fromInt(10, 10):
+            return dec
 
         result = ""
-        while n > 0:
-            result = cls._DIGITS[int(n % to)] + result
-            n = n // to
-        return cls(result, int(to))
+        while dec > 0:
+            result = cls._DIGITS[int(dec % to_base)] + result
+            dec = dec // to_base
+        return cls(result, int(to_base))
 
     def __len__(self) -> int:
         return len(self._value)
@@ -211,18 +231,18 @@ class Base:
             result.append(carry)
         if negative:
             result.append('-')
-        return type(self).from_index_ls(result, self._BASE)
+        return type(self).fromIndexList(result, self._BASE)
 
     @check_value()
     def __sub__(self, other):
         cls = type(self)
         if self == other:
-            return self.from_int(0, self._BASE)
+            return self.fromInt(0, self._BASE)
 
-        if other == self.from_int(0, self._BASE):
+        if other == self.fromInt(0, self._BASE):
             return self
 
-        if self == self.from_int(0, self._BASE):
+        if self == self.fromInt(0, self._BASE):
             return -other
 
         result = []
@@ -263,26 +283,26 @@ class Base:
         if negative and (result != [0]):
             result.append('-')
 
-        return type(self).from_index_ls(result, self._BASE)
+        return type(self).fromIndexList(result, self._BASE)
 
     @check_value()
     def __mul__(self, other):
         i = type(self)(other, self._BASE)
-        sum_ = self.from_int(0, self._BASE)
-        while i > self.from_int(0, self._BASE):
-            i -= self.from_int(1, self._BASE)
+        sum_ = self.fromInt(0, self._BASE)
+        while i > self.fromInt(0, self._BASE):
+            i -= self.fromInt(1, self._BASE)
             sum_ = sum_ + self
         return sum_
 
     @check_value()
     def __truediv__(self, other):
-        if self == self.from_int(0, self._BASE) or other == self.from_int(0, other.base):
+        if self == self.fromInt(0, self._BASE) or other == self.fromInt(0, other.base):
             raise ZeroDivisionError("division by zero")
         cls = type(self)
-        i = cls.from_int(0, self._BASE)
+        i = cls.fromInt(0, self._BASE)
         last = self - other
-        while last >= self.from_int(0, self._BASE):
-            i += self.from_int(1, self._BASE)
+        while last >= self.fromInt(0, self._BASE):
+            i += self.fromInt(1, self._BASE)
             last -= other
         return i
 
@@ -292,7 +312,7 @@ class Base:
 
     @check_value()
     def __mod__(self, other):
-        if self._value == self.from_int(0, self._BASE) or other == other.from_int(0, other.base):
+        if self._value == self.fromInt(0, self._BASE) or other == other.fromInt(0, other.base):
             raise ZeroDivisionError("division by zero")
         x = self // other
         result = self - (x * other)

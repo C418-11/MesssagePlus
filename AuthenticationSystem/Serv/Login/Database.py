@@ -15,12 +15,66 @@ from Lib.database.ABC import NameList
 from Lib.database.DataBase import DataBaseServer
 
 
+class LoginKey:
+    def __init__(self, key: str, timeout_timestamp: float) -> None:
+        self._key = key
+        self._timeout_timestamp = timeout_timestamp
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def timeout_timestamp(self):
+        return self._timeout_timestamp
+
+    @classmethod
+    def fromDict(cls, data: dict):
+        key = data["key"]
+        timeout_timestamp = data["timeout_timestamp"]
+        return cls(key, timeout_timestamp)
+
+    def toDict(self):
+        return {"key": self._key, "timeout_timestamp": self._timeout_timestamp}
+
+    def __eq__(self, other) -> bool:
+        """
+        key相等不代表没超时
+        """
+        try:
+            return self._key == other.key
+        except AttributeError:
+            return NotImplemented
+
+    def updateTimeout(self, timestamp: float) -> None:
+        """
+        :param timestamp: 所要更新的时间戳
+        """
+        if timestamp < self._timeout_timestamp:
+            # 不能小于原来的时间戳
+            raise ValueError(
+                f"Cannot be less than the original timestamp"
+                f" (old={self._timeout_timestamp}, new={timestamp}"
+            )
+        self._timeout_timestamp = timestamp
+
+    def checkTimeout(self, timestamp: float) -> bool:
+        """
+        :param timestamp: 所要对比的时间戳
+        如果超时了就返回True，否则返回False
+        """
+        return timestamp > self._timeout_timestamp
+
+    def __repr__(self):
+        return f"{type(self).__name__}(key={self._key}, timeout_stamp={self._timeout_timestamp})"
+
+
 class LoginData(NameList):
-    def __init__(self, uuid: Optional[str], login_key: Optional[str]) -> None:
+    def __init__(self, uuid: Optional[str], login_key: Optional[LoginKey]) -> None:
         super().__init__(uuid=uuid, login_key=login_key)
 
     uuid: str
-    login_key: str
+    login_key: LoginKey
 
     def ToNamelist(self) -> NameList:
         return NameList(uuid=self.uuid, login_key=self.login_key)

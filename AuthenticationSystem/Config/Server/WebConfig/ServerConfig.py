@@ -21,7 +21,7 @@ class Server(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Web/Server/"
+        return "./Server/Web/"
 
 
 ServerType = Server()

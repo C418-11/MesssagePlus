@@ -25,15 +25,12 @@ class _Server(IO):
         }
         super().__init__()
 
-    address: tuple[str, int]
-    max_connections: int
-
     @property
-    def address(self):
+    def address(self) -> tuple[str, int]:
         return self.settings["address"]
 
     @property
-    def max_connections(self):
+    def max_connections(self) -> int:
         return self.settings["max_connections"]
 
     @property

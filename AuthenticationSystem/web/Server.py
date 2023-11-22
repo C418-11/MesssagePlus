@@ -5,11 +5,13 @@
 import json
 import socket
 import sys
+import traceback
 from numbers import Real
 from threading import Thread
 from typing import Union, Any, override
 
 from AuthenticationSystem.Config.Server.WebConfig import ServerConfig
+from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Serv.Base import ServicePoolTypes
 from AuthenticationSystem.Serv.Login.Login import LostConnectError
 from Lib.SocketIO import Address
@@ -18,6 +20,23 @@ from Lib.SocketIO import SocketIo
 from Lib.log import Logging
 from Lib.simple_tools import Disable
 from Lib.simple_tools import ThreadPool
+
+
+serv_is_init = False
+
+
+def init_serv():
+    global serv_is_init
+    if serv_is_init:
+        return
+    serv_is_init = True
+    from AuthenticationSystem import Serv
+    for module in Serv.__all__:
+        __import__(f"AuthenticationSystem.Serv.{module}")
+
+
+if __name__ == "__main__":
+    init_serv()
 
 
 class Server(SocketServer):
@@ -72,8 +91,20 @@ class Server(SocketServer):
         js = byte_data.decode(encoding="utf-8")
         data = json.loads(js)
         success_add_serv = False
+
         try:
-            ServicePoolTypes[data["type"]].add_service(conn, addr, data)
+            serv_type = ServicePoolTypes[data["type"]]
+        except KeyError:
+            msg = f"{log_head} Adding service failed # Serv type maybe not exist (addr={addr})"
+            if not serv_is_init:
+                msg += f" -*- tip: You didn't call func init_serv -*- "
+            self.logger.warn(msg)
+            conn.send_json(Login.INVALID_CLIENT_TYPE(data["type"]).dump())
+            conn.close()
+            sys.exit(1)
+
+        try:
+            serv_type.add_service(conn, addr, data)
             success_add_serv = True
         except LostConnectError:
             self.logger.info(f"{log_head} Adding service failed # Lost connect (addr={addr})")
@@ -81,6 +112,7 @@ class Server(SocketServer):
             self.logger.warn(f"{log_head} Adding service failed "
                              f"# An uncaught error was encountered: "
                              f"(err={type(err).__name__}: {err}, addr={addr})")
+            traceback.print_exception(err, file=self.logger.warn_file)
 
         if not success_add_serv:
             conn.close()
@@ -135,4 +167,4 @@ class Server(SocketServer):
         ...
 
 
-__all__ = ("Server",)
+__all__ = ("Server", "serv_is_init", "init_serv")

@@ -15,6 +15,8 @@ config = ServerConfig.Server
 
 def main():
     from AuthenticationSystem.web.Server import Server
+    from AuthenticationSystem.web.Server import init_serv
+    init_serv()
 
     s = Server()
 

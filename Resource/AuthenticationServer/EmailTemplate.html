@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* 样式表 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .captcha-text {
+            font-size: 45px;
+            font-weight: bold;
+            letter-spacing:15px;
+            background-color: rgb(190, 190, 190);
+            border-radius: 7px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>验证码邮件</h1>
+            <p>
+                <span class="name">{{email}}</span>,
+                您好!
+                <br>
+                我们已收到您要求获得 MessagePlus 所用的一次性代码的申请。
+                <br>
+                您的一次性代码为:
+            </p>
+        <div class="captcha-container">
+            <span class="captcha-text">{{captcha_text}}</span>
+        </div>
+        <p>
+            如果您没有请求此代码，可放心忽略这封电子邮件。别人可能错误地键入了您的电子邮件地址。
+            <br>
+            谢谢!
+            <br>
+            MessagePlus 官方账号
+        </p>
+    </div>
+</body>
+</html>

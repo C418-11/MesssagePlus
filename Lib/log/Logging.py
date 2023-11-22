@@ -26,6 +26,14 @@ class Logger:
         self._warn_file = warn_file
         self._lock = lock
 
+    @property
+    def file(self):
+        return self._file
+
+    @property
+    def warn_file(self):
+        return self._warn_file
+
     @classmethod
     def _format(cls, time_str, level, text):
         all_kwarg = {"time": time_str, "level": level.level, "text": text}

@@ -31,5 +31,11 @@ class ThreadPool:
     def remove(self, uuid):
         del self._pool[uuid]
 
+    def __str__(self):
+        return str(dict(self._pool))
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self})"
+
 
 __all__ = ("Disable", "ThreadPool")

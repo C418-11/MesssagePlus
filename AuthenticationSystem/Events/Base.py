@@ -24,7 +24,7 @@ class Event(ABC):
     def dump(self) -> dict:
         return {self.Name: None}
 
-    def to_str(self) -> str:
+    def toStr(self) -> str:
         return json.dumps(self.dump())
 
 
@@ -37,7 +37,7 @@ class EventWithData(Event):
         ...
 
     @classmethod
-    def load_str(cls, txt) -> Self:
+    def loadStr(cls, txt) -> Self:
         return cls.load(json.loads(txt))
 
     @abstractmethod

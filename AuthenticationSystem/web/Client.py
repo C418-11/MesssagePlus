@@ -3,14 +3,18 @@
 
 
 import socket
-from typing import Optional, override
+import time
+from typing import Optional
+from typing import override
 from typing import Union
 
 from tqdm import tqdm
 
 from AuthenticationSystem.Events.Login import ACK_DATA
+from AuthenticationSystem.Serv.Login.Database import LoginKey
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
+from Lib.base_conversion import Base
 from Lib.simple_tools import Disable
 
 
@@ -23,7 +27,13 @@ class Client(SocketIo):
         self.settimeout(timeout)
         self.send_json({"type": service_type})
         yield self.recv()
-        self.send_event(ACK_DATA("abc", "lk!", "Client"))
+        self.send_event(
+            ACK_DATA(
+                uuid=Base("abc", 36),
+                login_key=LoginKey("123", time.time() - 50),
+                email="553515788@qq.com"
+            )
+        )
         yield self.recv()
         self.settimeout(old_timeout)
 

@@ -11,10 +11,11 @@ from tqdm import tqdm
 
 from AuthenticationSystem.Config.Server.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
-from AuthenticationSystem.Events.Login import FAILED
+from AuthenticationSystem.Events.Login import FailType
 from AuthenticationSystem.Serv.Login.Database import LoginData
 from AuthenticationSystem.Serv.Login.Database import build_database
 from Lib.SocketIO import SocketIo
+from Lib.base_conversion import Base
 from Lib.config import Progressbar
 from Lib.config import tools as cf_tools
 from Lib.database.ABC import NameList
@@ -167,6 +168,11 @@ class LostConnectError(ConnectionError):
         return "Lost connect"
 
 
+class UnableConnectDatabase(ConnectionError):
+    def __str__(self):
+        return "Unable to connect database"
+
+
 class LoginManager:
     login_Config = _Config
     TIMEOUT = login_Config.timeout
@@ -190,26 +196,25 @@ class LoginManager:
         self._cSocket.settimeout(self.TIMEOUT)
         self._cSocket.send_json(Login.ASK_DATA().dump())
 
-        data = {}
-        load_success = False
         try:
-            data = Login.ACK_DATA.load_str(self._cSocket.recv().decode())
-            load_success = True
+            raw_data = self._cSocket.recv().decode()
+            data = Login.ACK_DATA.loadStr(raw_data)
         except (ConnectionResetError, TimeoutError, EOFError) as err:
             # 这些错误发生大概率是连接直接断了, 所以没必要发送LOGIN FAILED事件
             self.login_logger.info(
-                f"{log_head} Lost Connect #during wait Login.ACK_DATA (addr='{addr}' reason='{type(err).__name__}: {err}')"
+                f"{log_head} Lost Connect #during wait Login.ACK_DATA"
+                f" (addr='{addr}' reason='{type(err).__name__}: {err}')"
             )
-        except Exception as err:
-            self.login_logger.warn(
-                f"{log_head} An un except exception recv #during wait Login.ACK_DATA (exc='{type(err.__name__)}: {err}')"
-            )
-            self._cSocket.send_json(Login.FAILED(FAILED.FailType.INVALID_DATA).dump())
-            traceback.print_exception(err, file=sys.stderr)
-
-        if not load_success:
             self._cSocket.close()
             raise LostConnectError
+        except Exception as err:
+            self.login_logger.warn(
+                f"{log_head} An un except exception recv #during wait Login.ACK_DATA"
+                f" (exc='{type(err).__name__}: {err}')"
+            )
+            self._cSocket.send_json(Login.FAILED(FailType.INVALID_DATA).dump())
+            traceback.print_exception(err, file=self.login_logger.warn_file)
+            raise
 
         try:
             client = self._init_db_client()
@@ -218,26 +223,26 @@ class LoginManager:
                 f"{log_head} Unable to connect to database! (reason='{type(err).__name__}: {err}')"
             )
             try:
-                self._cSocket.send_json(Login.FAILED(FAILED.FailType.FAILED_TO_ACQUIRE_DATA).dump())
+                self._cSocket.send_json(Login.FAILED(FailType.FAILED_TO_ACQUIRE_DATA).dump())
             except ConnectionError:
                 pass
             self._cSocket.close()
-            raise LostConnectError
+            raise UnableConnectDatabase
 
         except Exception as err:
             self.login_logger.error(
                 f"{log_head} Unable to connect to database! Unhandled exception occurred!"
                 f" (reason={type(err).__name__}：{err})"
             )
-            self._cSocket.send_json(Login.FAILED(FAILED.FailType.UNKNOWN_SERVER_ERROR).dump())
+            self._cSocket.send_json(Login.FAILED(FailType.UNKNOWN_DATABASE_ERROR).dump())
             self._cSocket.close()
-            raise LostConnectError
+            raise UnableConnectDatabase
 
         self._cSocket.settimeout(old_timeout)
 
         return data, client
 
-    def _find_user_in_db(self, uuid):
+    def _find_user_in_db(self, uuid: Base) -> list[LoginData]:
         ls = self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
         ls: list[NameList]
 

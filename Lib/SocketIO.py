@@ -153,11 +153,11 @@ class SocketIo:
 
         max_size = int(max_size)
 
-        packed_size = self._cSocket.recv(4)
+        packed_size = self._cSocket.recv(8)
         if not packed_size:
             raise EOFError("Empty size (Connect maybe closed)")
 
-        size = struct.unpack('i', packed_size)[0]
+        size = struct.unpack('q', packed_size)[0]
         size: int
 
         recv_size = 0
@@ -220,7 +220,7 @@ class SocketIo:
 
     def send(self, byte: bytes):
         size_of = byte.__sizeof__()
-        self._cSocket.sendall(struct.pack('i', size_of))
+        self._cSocket.sendall(struct.pack('q', size_of))
         self._cSocket.sendall(byte)
 
     def send_json(self, _json: Optional[Union[list, tuple, str, dict, set, bool]], encode="utf-8"):

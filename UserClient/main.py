@@ -23,7 +23,7 @@ def main():
     @showException
     def clicked(*_):
         txt = str(ui.Getter.toPlainText())
-        ui.add(MessageData(Base.from_int(10, 10), txt, "You", time.time()), 15)
+        ui.add(MessageData(Base.fromInt(10, 10), txt, "You", time.time()), 15)
         ui.Getter.clear()
 
     # noinspection PyUnresolvedReferences

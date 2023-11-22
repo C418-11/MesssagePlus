@@ -8,7 +8,6 @@ build_pyd
 build
 dist
 # resource dir
-resource
 font
 # runtime dir
 configs

@@ -151,7 +151,7 @@ class _Login(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Serv/Server/Login/"
+        return "./Server/Serv/Login/"
 
 
 Login = _Login()
@@ -166,7 +166,7 @@ class _Client(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Serv/Server/Client/"
+        return "./Server/Serv/Client/"
 
 
 ClientType = _Client()
@@ -181,7 +181,7 @@ class _ChatServer(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Serv/Server/ChatServer/"
+        return "./Server/Serv/ChatServer/"
 
 
 ChatServerType = _ChatServer()
@@ -196,7 +196,7 @@ class _ClientPool(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Serv/Server/ClientServicePool/"
+        return "./Server/Serv/ClientServicePool/"
 
 
 ClientPoolType = _ClientPool()
@@ -211,7 +211,7 @@ class _ChatServerPool(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Serv/Server/ChatServerServicePool/"
+        return "./Server/Serv/ChatServerServicePool/"
 
 
 ChatServerPoolType = _ChatServerPool()

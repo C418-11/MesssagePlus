@@ -4,7 +4,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-from enum import IntEnum
 from enum import StrEnum
 from typing import override
 
@@ -12,9 +11,12 @@ from AuthenticationSystem.Events.Base import Event
 from AuthenticationSystem.Events.Base import EventWithData
 from AuthenticationSystem.Events.Base import FailEvent
 from AuthenticationSystem.Events.Base import SuccessEvent
+from AuthenticationSystem.Events.Base import EventRegister
+from AuthenticationSystem.Serv.Login.Database import LoginKey
 from Lib.base_conversion import Base
 
 
+@EventRegister
 class _AskData(Event):
     Name = "Login.ASK_DATA"
 
@@ -22,17 +24,26 @@ class _AskData(Event):
 ASK_DATA = _AskData
 
 
+class ClientTypeNotFind(LookupError):
+    def __init__(self, client_type: str):
+        self._client_type = client_type
+
+    @property
+    def client_type(self):
+        return self._client_type
+
+    def __str__(self):
+        return f"ClientType Not Find (clientType='{self.client_type}')"
+
+
+@EventRegister
 class _AckData(EventWithData):
     Name = "Login.ACK_DATA"
 
-    class ClientType(StrEnum):
-        Client = "Client"
-        ChatServer = "ChatServer"
-
-    def __init__(self, uuid: Base, login_key: str, client_type: ClientType):
+    def __init__(self, uuid: Base, login_key: LoginKey, email: str):
         self._uuid = uuid
-        self._login_key = login_key
-        self._client_type = self.ClientType(client_type)
+        self._login_key = LoginKey(login_key.key, login_key.timeout_timestamp)
+        self._email = email
 
     @property
     def uuid(self):
@@ -43,21 +54,23 @@ class _AckData(EventWithData):
         return self._login_key
 
     @property
-    def client_type(self):
-        return self._client_type
+    def email(self):
+        return self._email
 
     @classmethod
     @override
     def load(cls, _json):
+        _json[cls.Name]["uuid"] = Base.fromDict(_json[cls.Name]["uuid"])
+        _json[cls.Name]["login_key"] = LoginKey.fromDict(_json[cls.Name]["login_key"])
         return cls(**_json[cls.Name])
 
     @override
     def dump(self):
         return {
             self.Name: {
-                "uuid": self._uuid,
-                "login_key": self._login_key,
-                "client_type": self._client_type
+                "uuid": self._uuid.toDict(),
+                "login_key": self._login_key.toDict(),
+                "email": self._email,
             }
         }
 
@@ -65,27 +78,16 @@ class _AckData(EventWithData):
 ACK_DATA = _AckData
 
 
-class _TimeOut(Event, FailEvent):
-    Name = "Login.LOGIN_TIMEOUT"
-
-
-LOGIN_TIMEOUT = _TimeOut
-
-
+@EventRegister
 class _InvalidClientType(EventWithData, FailEvent):
     Name = "Login.INVALID_CLIENT_TYPE"
 
-    def __init__(self, client_type, need_type):
+    def __init__(self, client_type):
         self._client_type = client_type
-        self._need_type = need_type
 
     @property
     def client_type(self):
         return self._client_type
-
-    @property
-    def need_type(self):
-        return self._need_type
 
     @classmethod
     @override
@@ -97,7 +99,6 @@ class _InvalidClientType(EventWithData, FailEvent):
         return {
             self.Name: {
                 "client_type": self._client_type,
-                "need_type": self._need_type
             }
         }
 
@@ -105,6 +106,7 @@ class _InvalidClientType(EventWithData, FailEvent):
 INVALID_CLIENT_TYPE = _InvalidClientType
 
 
+@EventRegister
 class _LoginSuccess(Event, SuccessEvent):
     Name = "Login.LOGIN_SUCCESS"
 
@@ -112,19 +114,21 @@ class _LoginSuccess(Event, SuccessEvent):
 SUCCESS = _LoginSuccess()
 
 
+class FailType(StrEnum):
+    UNKNOWN_DATABASE_ERROR = "Unknown Database Error"
+    NOTSET = "NotSet"
+    FAILED_TO_ACQUIRE_DATA = "Failed to Acquire Data"
+    INVALID_DATA = "Invalid Data"
+    USER_NOT_FOUND = "User Not Found"
+    UNKNOWN_SERVER_ERROR = "Unknown Server Error"
+
+
+@EventRegister
 class _LoginFailed(EventWithData, FailEvent):
     Name = "Login.LOGIN_FAILED"
 
-    class FailType(IntEnum):
-        UNKNOWN_SERVER_ERROR = -1
-        NOTSET = 0
-        INVALID_CLIENT_TYPE = 1
-        LOGIN_TIMEOUT = 2
-        FAILED_TO_ACQUIRE_DATA = 3
-        INVALID_DATA = 4
-
-    def __init__(self, type_=FailType.NOTSET):
-        self._type = self.FailType(type_)
+    def __init__(self, type_: FailType = FailType.NOTSET):
+        self._type = FailType(type_)
 
     @property
     def type(self):
@@ -146,4 +150,46 @@ class _LoginFailed(EventWithData, FailEvent):
 
 FAILED = _LoginFailed
 
-__all__ = ("ASK_DATA", "ACK_DATA", "LOGIN_TIMEOUT", "INVALID_CLIENT_TYPE", "SUCCESS", "FAILED")
+
+@EventRegister
+class _AskVerificationCode(Event):
+    Name = "Login.ASK_VERIFICATION_CODE"
+
+
+ASK_VERIFICATION_CODE = _AskVerificationCode()
+
+
+@EventRegister
+class _AckVerificationCode(EventWithData):
+    Name = "Login.ACK_VERIFICATION_CODE"
+
+    def __init__(self, code: str):
+        self._code = code
+
+    @property
+    def code(self):
+        return self._code
+
+    @classmethod
+    @override
+    def load(cls, _json):
+        return cls(**_json[cls.Name])
+
+    @override
+    def dump(self):
+        return {
+            self.Name: {
+                "code": self._code
+            }
+        }
+
+
+__all__ = (
+    "ASK_DATA",
+    "ACK_DATA",
+    "INVALID_CLIENT_TYPE",
+    "SUCCESS",
+    "FailType",
+    "FAILED",
+    "ASK_VERIFICATION_CODE"
+)
