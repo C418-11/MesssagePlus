@@ -3,18 +3,12 @@
 
 
 import socket
-import time
 from typing import Optional
 from typing import override
 from typing import Union
 
-from tqdm import tqdm
-
-from AuthenticationSystem.Events.Login import ACK_DATA
-from AuthenticationSystem.Serv.Login.Database import LoginKey
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
-from Lib.base_conversion import Base
 from Lib.simple_tools import Disable
 
 
@@ -26,14 +20,8 @@ class Client(SocketIo):
         old_timeout = self.gettimeout()
         self.settimeout(timeout)
         self.send_json({"type": service_type})
-        yield self.recv()
-        self.send_event(
-            ACK_DATA(
-                uuid=Base("abc", 36),
-                login_key=LoginKey("123", time.time() - 50),
-                email="553515788@qq.com"
-            )
-        )
+        _ack_data = yield self.recv()
+        self.send_event(_ack_data)
         yield self.recv()
         self.settimeout(old_timeout)
 
@@ -51,41 +39,4 @@ class Client(SocketIo):
         pass
 
 
-def _main_():
-    c = Client(Address("127.0.0.1", 32767))
-    init = c.init("Client", 10)
-    print(init)
-    print(next(init))
-    print(next(init))
-    while True:
-        try:
-            print(c.recv())
-        except (TimeoutError, ConnectionError, EOFError):
-            break
-    c.close()
-
-
-def example():
-    t = tqdm(
-        total=-1,
-        leave=True,
-        unit="client",
-        desc="Loop",
-    )
-
-    loop_times = 1
-
-    t.reset(loop_times)
-
-    for x in range(loop_times):
-        _main_()
-        t.update(1)
-        t.refresh()
-
-    t.close()
-
-
-if __name__ == "__main__":
-    example()
-
-__all__ = ("Client", "example")
+__all__ = ("Client", )

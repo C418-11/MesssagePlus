@@ -8,7 +8,7 @@ import os
 from typing import Union
 from typing import override
 
-from Lib.config.ConfigIO import IO
+from ..Base import Config
 from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.config.Progressbar import config_counter
 from Lib.database import logging as db_logging
@@ -59,7 +59,7 @@ class DataTypeAnnotation:
 
 class _DataBaseInjection:
 
-    def __init__(self, parent: IO):
+    def __init__(self, parent: Config):
         super().__init__()
         self.parent = parent
         self.parent.DEFAULT_FILES.update({
@@ -128,7 +128,7 @@ class _DataBaseInjection:
 
 
 @config_counter
-class _Login(IO, LogMixin):
+class _Login(Config, LogMixin):
     def __init__(self):
         self.DEFAULT_FILES = {
             os.path.join(self.BASE_DIR, "settings.json"): {
@@ -142,7 +142,7 @@ class _Login(IO, LogMixin):
         self.DB = _DataBaseInjection(self)
 
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     def timeout(self):
@@ -151,67 +151,67 @@ class _Login(IO, LogMixin):
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Serv/Login/"
+        return "./Serv/Login/"
 
 
 Login = _Login()
 
 
 @config_counter
-class _Client(IO, LogMixin):
+class _Client(Config, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Serv/Client/"
+        return "./Serv/Client/"
 
 
 ClientType = _Client()
 
 
 @config_counter
-class _ChatServer(IO, LogMixin):
+class _ChatServer(Config, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Serv/ChatServer/"
+        return "./Serv/ChatServer/"
 
 
 ChatServerType = _ChatServer()
 
 
 @config_counter
-class _ClientPool(IO, LogMixin):
+class _ClientPool(Config, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Serv/ClientServicePool/"
+        return "./Serv/ClientServicePool/"
 
 
 ClientPoolType = _ClientPool()
 
 
 @config_counter
-class _ChatServerPool(IO, LogMixin):
+class _ChatServerPool(Config, LogMixin):
     def __init__(self):
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Serv/ChatServerServicePool/"
+        return "./Serv/ChatServerServicePool/"
 
 
 ChatServerPoolType = _ChatServerPool()

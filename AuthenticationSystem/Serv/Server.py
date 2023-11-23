@@ -5,6 +5,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
 import time
+import uuid
 from threading import Thread
 from typing import override
 
@@ -15,6 +16,7 @@ from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
 from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
+from AuthenticationSystem.Serv.Login.Database import LoginKey
 from AuthenticationSystem.Serv.Login.Login import LoginManager
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
@@ -81,12 +83,13 @@ class LoginMixin(LoginManager):
     def login(self):
         log_head = f"[LoginManager.Login]"
         user_datas = self._find_user_in_db(self.userdata.uuid)
+        addr = self._cSocket.getpeername()
 
         try:
             userdata = user_datas[0]
         except IndexError:
             self._cSocket.send_json(Login.FAILED(FailType.USER_NOT_FOUND).dump())
-            self.login_logger.info(f"{log_head} User Not Found (uuid={self.userdata.uuid})")
+            self.login_logger.info(f"{log_head} User Not Found (addr={addr}, uuid={self.userdata.uuid})")
             raise UserNotFound(self.userdata.uuid)
 
         key_is_eq = self.userdata.login_key == userdata.login_key.key
@@ -94,35 +97,61 @@ class LoginMixin(LoginManager):
 
         if key_is_eq and key_is_not_timeout:
             self.login_logger.info(
-                f"{log_head} Login Success (uuid='{self.userdata.uuid}', userdata={self.userdata})"
+                f"{log_head} Login Success (addr='{addr}', uuid='{self.userdata.uuid}', userdata={self.userdata})"
             )
             self._cSocket.send_json(Login.SUCCESS.dump())
             return
         else:
             self.login_logger.info(
-                f"{log_head} Login Failed (uuid='{self.userdata.uuid}', userdata={self.userdata})"
+                f"{log_head} Login Failed (addr='{addr}', uuid='{self.userdata.uuid}', userdata={self.userdata})"
             )
             self._cSocket.send_json(Login.FAILED().dump())
             raise LoginKeyDoesntExist(self.userdata.uuid, self.userdata.login_key)
 
     def register(self):
         log_head = f"[LoginManager.Register]"
+        addr = self._cSocket.getpeername()
+
         try:
             verification_code = verificationSender(self.userdata.email)
         except Exception as err:
             self.login_logger.error(
                 f"{log_head} Failed to send the verification code"
-                f" (err={type(err).__name__}: {err})"
+                f" (addr='{addr}', uuid={self.userdata.uuid}, err={type(err).__name__}: {err})"
             )
             self._cSocket.send_json(Login.FAILED(FailType.UNKNOWN_SERVER_ERROR).dump())
             self._cSocket.close()
-            return UnableSendVerificationCode(err, self.userdata.email)
+            raise UnableSendVerificationCode(err, self.userdata.email)
 
         self.login_logger.info(
             f"{log_head} Send Verification Code"
-            f" (uuid={self.userdata.uuid}, verification_code={verification_code})"
+            f" (addr='{addr}', uuid='{self.userdata.uuid}', verification_code='{verification_code}')"
         )
         self._cSocket.send_json(Login.ASK_VERIFICATION_CODE.dump())
+        old_timeout = self._cSocket.gettimeout()
+        self._cSocket.settimeout(None)
+        try:
+            raw_data = self._cSocket.recv().decode()
+            self._cSocket.settimeout(old_timeout)
+        except (ConnectionError, EOFError) as err:
+            self.login_logger.info(
+                f"{log_head} Lost Connect #during wait Login.ACK_VERIFICATION_CODE"
+                f" (addr='{addr}', uuid='{self.userdata.uuid}', reason='{type(err).__name__}: {err}')"
+            )
+            self._cSocket.close()
+            raise
+        data = Login.ACK_VERIFICATION_CODE.loadStr(raw_data)
+        data: Login.ACK_VERIFICATION_CODE
+        if data.code == ''.join(verification_code):
+            self.login_logger.info(
+                f"{log_head} Register Success "
+                f"(addr='{addr}', uuid='{self.userdata.uuid}', userdata={self.userdata},"
+                f" verification_code='{verification_code}')"
+            )
+            print(self.userdata.login_key)
+            new_key = LoginKey(str(uuid.uuid4()), time.time() + 3600)
+            # 生成新的登录密钥 (会在 1 小时后过期)
+            self._cSocket.send_json(Login.REGISTER_SUCCESS(self.userdata.uuid, new_key).dump())
         # todo
 
 

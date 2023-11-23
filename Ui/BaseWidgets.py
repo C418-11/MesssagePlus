@@ -10,11 +10,42 @@ from enum import Enum
 from math import cos, pi
 from typing import Optional, override
 
-from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint, QRectF
-from PyQt5.QtGui import QWheelEvent, QColor, QPainter, QPainterPath, QBrush
+from PyQt5.QtCore import QDateTime, Qt, QTimer, QPoint, QRectF, QSize, pyqtSignal
+from PyQt5.QtGui import QWheelEvent, QColor, QPainter, QPainterPath, QBrush, QResizeEvent
 from PyQt5.QtWidgets import QApplication, QScrollArea, QWidget
 
 from Ui.tools import showException
+
+
+class GetScale(QWidget):
+    scaleChanged = pyqtSignal(float, float, name="scaleChange")
+
+    def __init__(self, parent=None, reference_size: QSize = None):
+        super().__init__(parent)
+        self.scaleWidth = 1.0
+        self.scaleHeight = 1.0
+        if reference_size is None:
+            try:
+                reference_size = self.parent().minimumSize()
+            except AttributeError:
+                reference_size = self.minimumSize()
+        self.reference_size = reference_size
+
+    @showException
+    @override
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        size = self.reference_size
+        try:
+            self.scaleWidth = event.size().width() / size.width()
+        except ZeroDivisionError:
+            pass
+        try:
+            self.scaleHeight = event.size().height() / size.height()
+        except ZeroDivisionError:
+            pass
+        # noinspection PyUnresolvedReferences
+        self.scaleChanged.emit(self.scaleWidth, self.scaleHeight)
 
 
 @dataclass
@@ -223,4 +254,4 @@ class SmoothMode(Enum):
     COSINE = 4
 
 
-__all__ = ("SmoothlyScrollArea", "SmoothMode", "RoundShadow")
+__all__ = ("SmoothlyScrollArea", "SmoothMode", "RoundShadow", "GetScale")

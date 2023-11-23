@@ -203,14 +203,14 @@ class LoginManager:
             # 这些错误发生大概率是连接直接断了, 所以没必要发送LOGIN FAILED事件
             self.login_logger.info(
                 f"{log_head} Lost Connect #during wait Login.ACK_DATA"
-                f" (addr='{addr}' reason='{type(err).__name__}: {err}')"
+                f" (addr='{addr}', reason='{type(err).__name__}: {err}')"
             )
             self._cSocket.close()
             raise LostConnectError
         except Exception as err:
             self.login_logger.warn(
                 f"{log_head} An un except exception recv #during wait Login.ACK_DATA"
-                f" (exc='{type(err).__name__}: {err}')"
+                f" (addr='{addr}', exc='{type(err).__name__}: {err}')"
             )
             self._cSocket.send_json(Login.FAILED(FailType.INVALID_DATA).dump())
             traceback.print_exception(err, file=self.login_logger.warn_file)
@@ -220,7 +220,8 @@ class LoginManager:
             client = self._init_db_client()
         except LoginDatabaseFailedError as err:
             self.login_logger.warn(
-                f"{log_head} Unable to connect to database! (reason='{type(err).__name__}: {err}')"
+                f"{log_head} Unable to connect to database!"
+                f" (addr='{addr}', reason='{type(err).__name__}: {err}')"
             )
             try:
                 self._cSocket.send_json(Login.FAILED(FailType.FAILED_TO_ACQUIRE_DATA).dump())
@@ -232,7 +233,7 @@ class LoginManager:
         except Exception as err:
             self.login_logger.error(
                 f"{log_head} Unable to connect to database! Unhandled exception occurred!"
-                f" (reason={type(err).__name__}：{err})"
+                f" (addr='{addr}', reason='{type(err).__name__}：{err}')"
             )
             self._cSocket.send_json(Login.FAILED(FailType.UNKNOWN_DATABASE_ERROR).dump())
             self._cSocket.close()
@@ -245,6 +246,7 @@ class LoginManager:
     def _find_user_in_db(self, uuid: Base) -> list[LoginData]:
         ls = self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
         ls: list[NameList]
+        addr = self._cSocket.getpeername()
 
         ret = []
         for data in ls:
@@ -252,7 +254,10 @@ class LoginManager:
             try:
                 ret.append(LoginData(**dict_))
             except TypeError:
-                self.login_logger.warn(f"[LoginManager] Data that cannot be parsed (data='{dict_}')")
+                self.login_logger.warn(
+                    f"[LoginManager] Data that cannot be parsed"
+                    f" (addr='{addr}, 'data='{dict_}')"
+                )
 
         return ret
 

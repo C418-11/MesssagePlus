@@ -167,7 +167,7 @@ class _AckVerificationCode(EventWithData):
         self._code = code
 
     @property
-    def code(self):
+    def code(self) -> str:
         return self._code
 
     @classmethod
@@ -184,6 +184,45 @@ class _AckVerificationCode(EventWithData):
         }
 
 
+ACK_VERIFICATION_CODE = _AckVerificationCode
+
+
+@EventRegister
+class _RegisterSuccess(EventWithData, SuccessEvent):
+    Name = "Login.REGISTER_SUCCESS"
+
+    def __init__(self, uuid: Base, login_key: LoginKey):
+        self._uuid = uuid
+        self._login_key = login_key
+
+    @property
+    def uuid(self) -> Base:
+        return self._uuid
+
+    @property
+    def login_key(self) -> LoginKey:
+        return self._login_key
+
+    @classmethod
+    @override
+    def load(cls, _json):
+        _json[cls.Name]["uuid"] = Base.fromDict(_json[cls.Name]["uuid"])
+        _json[cls.Name]["login_key"] = LoginKey.fromDict(_json[cls.Name]["login_key"])
+        return cls(**_json[cls.Name])
+
+    @override
+    def dump(self):
+        return {
+            self.Name: {
+                "uuid": self._uuid.toDict(),
+                "login_key": self._login_key.toDict(),
+            }
+        }
+
+
+REGISTER_SUCCESS = _RegisterSuccess
+
+
 __all__ = (
     "ASK_DATA",
     "ACK_DATA",
@@ -191,5 +230,7 @@ __all__ = (
     "SUCCESS",
     "FailType",
     "FAILED",
-    "ASK_VERIFICATION_CODE"
+    "ASK_VERIFICATION_CODE",
+    "ACK_VERIFICATION_CODE",
+    "REGISTER_SUCCESS"
 )

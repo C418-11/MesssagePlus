@@ -10,16 +10,16 @@ from datetime import datetime
 from itertools import count
 from typing import Optional, Union
 
-from PyQt5.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QMetaObject
 from PyQt5.QtCore import QPoint
 from PyQt5.QtCore import QRect
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QResizeEvent
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QScrollArea
 from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
@@ -27,7 +27,41 @@ from PyQt5.QtWidgets import QWidget
 from Lib.base_conversion import Base
 from Ui.BaseWidgets import RoundShadow
 from Ui.BaseWidgets import SmoothlyScrollArea
+from Ui.BaseWidgets import GetScale
 from Ui.tools import add_line_breaks
+
+
+class InputArea(QWidget):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.Getter: Optional[QTextEdit] = None
+        self.SendMessageButton: Optional[QPushButton] = None
+
+        self.setObjectName("InputArea")
+        self.SendMessageButton = QPushButton(self)
+        self.SendMessageButton.setGeometry(QRect(520, 80, 75, 23))
+        self.SendMessageButton.setObjectName("SendMessageButton")
+
+        self.Getter = QTextEdit(self)
+        self.Getter.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.Getter.setFrameShadow(QFrame.Raised)
+        self.Getter.setObjectName("Getter")
+
+        self.SendMessageButton.raise_()
+
+        self.ReTranslateUi()
+
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        self.Getter.resize(event.size())
+
+        width = event.size().width() - self.SendMessageButton.width() - 10
+        height = event.size().height() - self.SendMessageButton.height() - 8
+        self.SendMessageButton.move(width, height)
+
+    def ReTranslateUi(self):
+        _translate = QCoreApplication.translate
+        self.SendMessageButton.setText(_translate("InputArea", "发送"))
 
 
 @dataclass
@@ -85,7 +119,22 @@ class Message(RoundShadow, QWidget):
 
         min_height = self.time_label.height() + self.username_label.height() + self.message.height()
         self.setMinimumHeight(min_height)
-        self.background_rect = QRect(self.x(), self.y(), width - 10, min_height)
+        self.background_rect = QRect(self.x(), self.y(), width - 10, min_height + 10)
+
+    def refreshSize(self):
+        width = self.parent().width()
+        self.setMaximumWidth(width)
+        self.setMinimumWidth(width)
+        width -= 30
+        self.background_rect.setWidth(width)
+
+        self.message.resize(width, self.message.height())
+        self.time_label.resize(width, self.time_label.height())
+        self.username_label.resize(width, self.username_label.height())
+
+        min_height = self.time_label.height() + self.username_label.height() + self.message.height()
+        self.setMinimumHeight(min_height)
+        self.background_rect.setHeight(min_height + 10)
 
     class TimeLabel(QLabel):
         def __init__(self, parent: QWidget, /, *, time_stamp: float, width: int, font: QFont) -> None:
@@ -97,6 +146,10 @@ class Message(RoundShadow, QWidget):
                 self.setFont(font)
             self.ReTranslateUi()
             self.RefreshSize()
+
+        def resizeEvent(self, event: QResizeEvent):
+            self.size_width = event.size().width()
+            super().resizeEvent(event)
 
         def ReTranslateUi(self):
             _translate = QCoreApplication.translate
@@ -121,6 +174,10 @@ class Message(RoundShadow, QWidget):
             self.setText(self.username)
             self.RefreshSize()
 
+        def resizeEvent(self, event: QResizeEvent):
+            self.size_width = event.size().width()
+            super().resizeEvent(event)
+
         def RefreshSize(self):
             min_size = self.fontMetrics().size(Qt.TextExpandTabs, self.text())
             self.resize(self.size_width, min_size.height())
@@ -130,33 +187,57 @@ class Message(RoundShadow, QWidget):
             super().__init__(parent)
             self.setObjectName("ShowMessage")
             self.raw_message = message
-            self.size_width = width - 50
+            self.size_width = width
 
             if font is not None:
                 self.setFont(font)
 
-            self.message = add_line_breaks(self.raw_message, self.size_width, self.fontMetrics())
-            self.RefreshSize()
+            self.message: Optional[str] = None
 
-            self.setText(self.message)
+            self.RefreshText()
+
+        def resizeEvent(self, event: QResizeEvent):
+            if self.width() == self.size_width:
+                return
+            self.size_width = event.size().width()
+            self.RefreshText()
 
         def RefreshSize(self):
             min_size = self.fontMetrics().size(Qt.TextExpandTabs, self.message)
-            self.resize(min_size.width(), min_size.height())
+            self.resize(self.size_width, min_size.height())
+
+        def RefreshText(self):
+            self.message = add_line_breaks(self.raw_message, self.size_width - 50, self.fontMetrics())
+            self.setText(self.message)
+            self.RefreshSize()
 
 
-class UIChatWindow(object):
-    def __init__(self, main_window: QMainWindow):
-        self.MainWindow = main_window
-        self.Getter: Optional[QTextEdit] = None
-        self.SendMessageButton: Optional[QPushButton] = None
-        self.InputArea: Optional[QWidget] = None
-        self.MessageLayout: Optional[QVBoxLayout] = None
-        self.MessageScrollContents: Optional[QWidget] = None
-        self.MessageArea: Optional[QScrollArea] = None
-        self.MainWidget: Optional[QWidget] = None
-        self.messages: dict[Base, Message] = {}
+class MessageArea(SmoothlyScrollArea):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.messages: list[Message] = []
         self.count_message = count()
+
+        self.MessageScrollContents = QWidget(self)
+        self.MessageScrollContents.setMaximumWidth(self.width() - 2)
+        self.MessageScrollContents.setMinimumWidth(self.width() - 2)
+        self.MessageScrollContents.setObjectName("MessageScrollContents")
+
+        self.MessageLayout = QVBoxLayout(self.MessageScrollContents)
+        self.MessageScrollContents.setLayout(self.MessageLayout)
+        self.setWidget(self.MessageScrollContents)
+
+        # self.setFrameShadow(QFrame.Raised)
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setObjectName("MessageArea")
+
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        self.MessageScrollContents.setMaximumWidth(self.width() - 2)
+        self.MessageScrollContents.setMinimumWidth(self.width() - 2)
+        for x in self.messages:
+            x.refreshSize()
 
     def add(self, message_data: MessageData, spacing: int = 0):
         msg_obj = Message(self.MessageScrollContents, message_data=message_data)
@@ -166,55 +247,37 @@ class UIChatWindow(object):
         self.MessageLayout.setStretchFactor(msg_obj, 12)
         self.MessageLayout.setSpacing(spacing)
         self.MessageLayout.setStretch(next(self.count_message) - 1, 1)
-        self.messages[message_data.message_uuid] = msg_obj
+        self.messages.append(msg_obj)
+
+
+class UiChatWindow(object):
+    def __init__(self, main_window: QMainWindow):
+        self.main_window = main_window
+
+        self.InputArea: Optional[InputArea] = None
+        self.MessageArea: Optional[MessageArea] = None
+
+        self.CentralWidget: Optional[GetScale] = None
 
     def setupUi(self):
-        self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.resize(837, 618)
-        self.MainWidget = QWidget(self.MainWindow)
-        self.MainWidget.setObjectName("MainWidget")
+        self.main_window.setMinimumSize(700, 500)
 
-        self.MessageArea = SmoothlyScrollArea(self.MainWidget)
-        self.MessageArea.setGeometry(QRect(0, 0, 600, 450))
-        # self.MessageArea.setFrameShadow(QFrame.Raised)
-        self.MessageArea.setWidgetResizable(True)
-        self.MessageArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.MessageArea.setObjectName("MessageArea")
+        self.CentralWidget = GetScale(self.main_window)
+        self.CentralWidget.setObjectName("CentralWidget")
 
-        self.MessageScrollContents = QWidget(self.MessageScrollContents)
-        self.MessageScrollContents.setMaximumWidth(self.MessageArea.width() - 2)
-        self.MessageScrollContents.setMinimumWidth(self.MessageArea.width() - 2)
-        self.MessageScrollContents.setObjectName("MessageScrollContents")
+        self.MessageArea = MessageArea(self.CentralWidget)
+        self.InputArea = InputArea(self.CentralWidget)
 
-        self.MessageLayout = QVBoxLayout(self.MessageScrollContents)
-        self.MessageScrollContents.setLayout(self.MessageLayout)
-        self.MessageArea.setWidget(self.MessageScrollContents)
+        self.main_window.setCentralWidget(self.CentralWidget)
 
-        self.InputArea = QWidget(self.MainWidget)
-        self.InputArea.setGeometry(QRect(0, 509, 601, 111))
-        self.InputArea.setObjectName("InputArea")
+        self.CentralWidget.scaleChanged.connect(self.autoResize)
 
-        self.SendMessageButton = QPushButton(self.InputArea)
-        self.SendMessageButton.setGeometry(QRect(520, 80, 75, 23))
-        self.SendMessageButton.setObjectName("SendMessageButton")
+        QMetaObject.connectSlotsByName(self.main_window)
 
-        self.Getter = QTextEdit(self.InputArea)
-        self.Getter.setGeometry(QRect(0, 0, 601, 111))
-        self.Getter.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-        self.Getter.setFrameShadow(QFrame.Raised)
-        self.Getter.setObjectName("Getter")
-
-        self.Getter.raise_()
-        self.SendMessageButton.raise_()
-        self.MainWindow.setCentralWidget(self.MainWidget)
-
-        self.ReTranslateUi()
-        QMetaObject.connectSlotsByName(self.MainWindow)
-
-    def ReTranslateUi(self):
-        _translate = QCoreApplication.translate
-        self.MainWindow.setWindowTitle(_translate("ChatWindow", "主界面"))
-        self.SendMessageButton.setText(_translate("ChatWindow", "发送"))
+    def autoResize(self, scale_width: float, scale_height: float):
+        self.MessageArea.resize(int(500 * scale_width), int(400 * scale_height))
+        self.InputArea.move(0, self.MessageArea.height())
+        self.InputArea.resize(int(500*scale_width), int(100*scale_height))
 
 
-__all__ = ("UIChatWindow", "MessageData", "Message")
+__all__ = ("UiChatWindow", "MessageData", "Message")

@@ -7,9 +7,7 @@ __version__ = "0.1"
 
 import random
 import smtplib
-import time
 import uuid
-from datetime import datetime
 
 from email.header import Header
 from email.mime.text import MIMEText
@@ -29,16 +27,15 @@ if not config.userEmail or not config.userPassword:
     raise APIUserPasswordNotConfigured()
 
 
-def verificationSender(recv: str):
-    time_str = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S.%f")
-    code = str(uuid.uuid3(uuid.NAMESPACE_DNS, f"{recv}{time_str}"))
-    code = random.choices(code, k=6)
+def verificationSender(recv: str) -> list[str]:
+    code_ls = random.choices(str(uuid.uuid4()), k=6)
+    code_ls: list[str]
 
-    for x in range(len(code)):
+    for x in range(len(code_ls)):
         if int(random.random() + 0.5):
-            code[x] = code[x].upper()
+            code_ls[x] = code_ls[x].upper()
 
-    code_str = ''.join(code)
+    code_str = ''.join(code_ls)
 
     with open(config.emailTemplate, "r", encoding="utf-8") as f:
         msg_str = f.read()
@@ -56,7 +53,7 @@ def verificationSender(recv: str):
             smtp_obj.connect(*config.smtpAddr)
             smtp_obj.login(config.userEmail, config.userPassword)
             smtp_obj.sendmail(config.userEmail, recv, message.as_string())
-        return code
+        return code_ls
     except Exception:
         raise
 

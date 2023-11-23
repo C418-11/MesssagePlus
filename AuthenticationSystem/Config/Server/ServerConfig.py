@@ -7,12 +7,12 @@ __version__ = "0.1"
 import os.path
 from typing import override
 
-from Lib.config.ConfigIO import IO
+from .Base import Config
 from Lib.config.Progressbar import config_counter
 
 
 @config_counter
-class _Server(IO):
+class _Server(Config):
     def __init__(self):
         self.DEFAULT_FILES = {
             os.path.join(self.BASE_DIR, "config.json"): {
@@ -36,7 +36,7 @@ class _Server(IO):
     @property
     @override
     def BASE_DIR(self) -> str:
-        return "./Server/"
+        return "."
 
 
 Server = _Server()

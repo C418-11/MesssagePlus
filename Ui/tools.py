@@ -91,37 +91,20 @@ def add_line_breaks(text: str, width: int, font_metrics: QFontMetrics):
     def get_width(_text):
         return font_metrics.size(Qt.TextExpandTabs, _text).width()
 
-    # 获取文本宽度
     text_width = get_width(text)
 
-    # 如果文本宽度不超过指定的宽度，则直接返回文本
     if text_width < width:
         return text
-
-    # 否则，需要在文本中添加换行符
-    # 这里使用了字符串的split和join方法
-    # 将文本按照换行符分割成多个子字符串
-    lines = text.split('\n')
-    # 遍历每个子字符串，并计算其宽度
-    # 如果子字符串的宽度不超过指定的宽度，则直接将其添加到结果字符串中
-    # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
     result = ''
-    for line in lines:
-        # 获取子字符串的宽度
-        line_width = get_width(line)
-        # 如果子字符串的宽度不超过指定的宽度，则直接将其添加到结果字符串中
-        if line_width < width:
-            result += line + '\n'
-        # 如果子字符串的宽度超过了指定的宽度，则需要在其周围添加换行符，并将其添加到结果字符串中
+
+    chr_width = 0
+    for sub_word in text:
+        chr_width += get_width(sub_word)
+        if chr_width < width:
+            result += sub_word
         else:
+            result += '\n' + sub_word
             chr_width = 0
-            for sub_word in str(line):
-                chr_width += get_width(sub_word)
-                if chr_width < width:
-                    result += sub_word
-                else:
-                    result += '\n' + sub_word
-                    chr_width = 0
 
     # 返回结果字符串
     return result

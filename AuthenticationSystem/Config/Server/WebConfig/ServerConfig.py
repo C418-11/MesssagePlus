@@ -6,24 +6,24 @@ __version__ = "0.1"
 
 from typing import override
 
-from Lib.config.ConfigIO import IO
+from ..Base import Config
 from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.config.Progressbar import config_counter
 
 
 @config_counter
-class Server(IO, LogMixin):
+class _Server(Config, LogMixin):
 
     def __init__(self):
         LogMixin.__init__(self)
-        IO.__init__(self)
+        Config.__init__(self)
 
     @property
     @override
     def BASE_DIR(self):
-        return "./Server/Web/"
+        return "./Web/"
 
 
-ServerType = Server()
+ServerType = _Server()
 
 __all__ = ("ServerType",)

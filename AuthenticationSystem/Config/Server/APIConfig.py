@@ -7,12 +7,12 @@ __version__ = "0.1"
 import os.path
 from typing import override
 
-from Lib.config.ConfigIO import IO
+from .Base import Config
 from Lib.config.Progressbar import config_counter
 
 
 @config_counter
-class _Verification(IO):
+class _Verification(Config):
     def __init__(self):
         self.DEFAULT_FILES = {
             os.path.join(self.BASE_DIR, "verification.json"): {
@@ -51,7 +51,7 @@ class _Verification(IO):
     @property
     @override
     def BASE_DIR(self) -> str:
-        return "./Server/API/"
+        return "./API/"
 
 
 Verification = _Verification()

@@ -10,30 +10,43 @@ import time
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from Lib.base_conversion import Base
-from Ui.ChatWindow import UIChatWindow, MessageData
+from Ui.ChatWindow import UiChatWindow, MessageData
+from Ui.LoginWindow import UiLoginWindow
 from Ui.tools import showException
 
 
 def chat_window():
     app = QApplication(sys.argv)
     window = QMainWindow()
-    ui = UIChatWindow(window)
+    ui = UiChatWindow(window)
     ui.setupUi()
 
     @showException
     def clicked(*_):
-        txt = str(ui.Getter.toPlainText())
-        ui.add(MessageData(Base.fromInt(10, 10), txt, "You", time.time()), 15)
-        ui.Getter.clear()
+        txt = str(ui.InputArea.Getter.toPlainText())
+        ui.MessageArea.add(MessageData(Base.fromInt(10, 10), txt, "You", time.time()), 15)
+        ui.InputArea.Getter.clear()
 
     # noinspection PyUnresolvedReferences
-    ui.SendMessageButton.clicked.connect(clicked)
+    ui.InputArea.SendMessageButton.clicked.connect(clicked)
+
+    window.show()
+    sys.exit(app.exec_())
+
+
+def login_window():
+    app = QApplication(sys.argv)
+    window = QMainWindow()
+    ui = UiLoginWindow(window)
+    ui.setupUi()
 
     window.show()
     sys.exit(app.exec_())
 
 
 def main():
+    chat_window()
+    login_window()
     pass
 
 

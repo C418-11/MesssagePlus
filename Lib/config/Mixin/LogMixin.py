@@ -21,6 +21,7 @@ class LogMixin(Base.ConfigIoLike):
     _logger_data: dict
 
     def __init__(self):
+        """Must be init before ConfigIO.IO"""
         if self.DEFAULT_FILES is None:
             self.DEFAULT_FILES = {}
         self.DEFAULT_FILES.update(self._DEFAULT_LOG_DATA)
