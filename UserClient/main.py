@@ -13,6 +13,7 @@ from Lib.base_conversion import Base
 from Ui.ChatWindow import UiChatWindow, MessageData
 from Ui.LoginWindow import UiLoginWindow
 from Ui.tools import showException
+from UserClient.login import LoginAuthenticationSystem
 
 
 def chat_window():
@@ -46,8 +47,8 @@ def login_window():
 
 def main():
     chat_window()
-    login_window()
-    pass
+    # login = LoginAuthenticationSystem()
+    # login.login()
 
 
 if __name__ == "__main__":

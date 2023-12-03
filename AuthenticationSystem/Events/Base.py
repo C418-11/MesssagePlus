@@ -18,14 +18,26 @@ class Event(ABC):
         ...
 
     @classmethod
-    def load(cls, *args, **kwargs):
-        return cls()
+    def eq_str(cls, other: str) -> bool:
+        eq = False
+        try:
+            other = json.loads(other)
+            eq = cls.Name in other.keys()
+        except (json.JSONDecodeError, KeyError):
+            pass
+        return eq or cls.Name == other
+
+    def eq_dict(self, other: dict) -> bool:
+        return self.dump() == other
 
     def dump(self) -> dict:
         return {self.Name: None}
 
     def toStr(self) -> str:
         return json.dumps(self.dump())
+
+    def __repr__(self):
+        return f"{self.Name}"
 
 
 class EventWithData(Event):
@@ -56,7 +68,7 @@ class EventWithData(Event):
             raise
 
     def __repr__(self):
-        return f"{self.dump()}"
+        return f"{self.Name}({self.dump()})"
 
 
 EventDict = {}

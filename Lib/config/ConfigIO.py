@@ -94,23 +94,49 @@ class IO(ABC, BaseIO):
         if self.DEFAULT_FILES is None:
             self.DEFAULT_FILES = {}
         self.data = {}
+        self.data_to_write = {}
 
         self._progress_bar_hook()
 
         for raw in self.DEFAULT_FILES:
-            file_data = self.DEFAULT_FILES[raw]
+            default_data = self.DEFAULT_FILES[raw]
             path = os.path.join(self._BASE_PATH, raw)
             path = os.path.normpath(path)
 
             try:
                 self._logger.debug(f"[Config](INIT LEVEL) File will be read (file='{path}')")
-                self.data[file_data["key"]] = self._read(path, raw)
+                self.data[default_data["key"]] = self._read(path, raw)
+                self.data_to_write[raw] = {"key": default_data["key"], "data": self.data[default_data["key"]]}
                 self._logger.info(f"[Config](INIT LEVEL) Loaded config file (path='{path}')")
             except JSONDecodeError as err:
                 self._logger.error(f"[Config](INIT LEVEL) Configuration file format error (path='{path}' err='{err}')")
                 raise
 
             Progressbar.update(1)
+
+    def save(self):
+        for raw in self.data_to_write:
+            data = self.data_to_write[raw]
+            path = os.path.join(self._BASE_PATH, raw)
+            path = os.path.normpath(path)
+            self._write_config_file(path, self._dumps(data["data"]))
+            self._logger.info(f"[Config](SAVE LEVEL) Saved config file (path='{path}')")
+
+        for raw in self.DEFAULT_FILES:
+            default_data = self.DEFAULT_FILES[raw]
+            path = os.path.join(self._BASE_PATH, raw)
+            path = os.path.normpath(path)
+
+            try:
+                self._logger.debug(f"[Config](REREAD LEVEL) File will be read (file='{path}')")
+                self.data[default_data["key"]] = self._read(path, raw)
+                self.data_to_write[raw] = {"key": default_data["key"], "data": self.data[default_data["key"]]}
+                self._logger.info(f"[Config](REREAD LEVEL) Loaded config file (path='{path}')")
+            except JSONDecodeError as err:
+                self._logger.error(
+                    f"[Config](REREAD LEVEL) Configuration file format error (path='{path}' err='{err}')"
+                )
+                raise
 
     def _progress_bar_hook(self):
         self._logger.debug(f"[Config](Progressbar Hook) Try to hook progress bar")

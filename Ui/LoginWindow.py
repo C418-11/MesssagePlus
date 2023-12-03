@@ -13,6 +13,7 @@ class UiLoginWindow(object):
         self.GetUUID = None
         self.GetPassword = None
         self.centralWidget = None
+        self.LoginButton = None
 
     def setupUi(self):
         self.centralWidget = QtWidgets.QWidget(self.main_window)
@@ -37,6 +38,11 @@ class UiLoginWindow(object):
         self.Title.setCursor(QtGui.QCursor(Qt.ArrowCursor))
         self.Title.setAlignment(Qt.AlignCenter)
         self.Title.setObjectName("Title")
+
+        self.LoginButton = QtWidgets.QPushButton(self.centralWidget)
+        self.LoginButton.setGeometry(QtCore.QRect(330, 380, 171, 31))
+        self.LoginButton.setObjectName("LoginButton")
+
         self.main_window.setCentralWidget(self.centralWidget)
 
         self.ReTranslateUi()
@@ -47,3 +53,4 @@ class UiLoginWindow(object):
         self.GetUUID.setPlaceholderText(_translate("LoginWindow", "请输入uuid..."))
         self.GetPassword.setPlaceholderText(_translate("LoginWindow", "请输入密码..."))
         self.Title.setText(_translate("LoginWindow", "登录"))
+        self.LoginButton.setText(_translate("LoginWindow", "登录"))

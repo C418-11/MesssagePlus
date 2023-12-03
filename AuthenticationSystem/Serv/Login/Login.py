@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from AuthenticationSystem.Config.Server.ServConfig import ServerConfig
 from AuthenticationSystem.Events import Login
-from AuthenticationSystem.Events.Login import FailType
+from AuthenticationSystem.Events.Login import FailType, WrongEventType
 from AuthenticationSystem.Serv.Login.Database import LoginData
 from AuthenticationSystem.Serv.Login.Database import build_database
 from Lib.SocketIO import SocketIo
@@ -118,7 +118,7 @@ def _init_database():
         for store in _DBStores:
             temp = [
                 STORE.CREATE(_DBName, "default", store),
-                STORE.SET_FORMAT(_DBName, store, LoginData(None, None).ToNamelist()),
+                STORE.SET_FORMAT(_DBName, store, LoginData.empty().ToNamelist()),
                 STORE.SET_HISTORY_FORMANT(_DBName, store, "[{time_}]({type_}): {value}"),
             ]
             event_ls += temp
@@ -180,13 +180,14 @@ class LoginManager:
 
     def __init__(self, socket: SocketIo, store: str):
         self._cSocket = socket
-        self.userdata, self.db_client = self._get_data()
+        self.userdata = self._get_user_data()
+        self.db_client = self._get_db_client()
         self._store = store
 
     def _init_db_client(self):
         return _init_db_client(self.login_logger, self.TIMEOUT)
 
-    def _get_data(self) -> tuple[Login.ACK_DATA, DataBaseClient]:
+    def _get_user_data(self) -> Login.ACK_DATA:
 
         log_head = f"[LoginManager]"
 
@@ -194,7 +195,7 @@ class LoginManager:
         self.login_logger.debug(f"{log_head} Recv new login request (addr='{addr}')")
         old_timeout = self._cSocket.gettimeout()
         self._cSocket.settimeout(self.TIMEOUT)
-        self._cSocket.send_json(Login.ASK_DATA().dump())
+        self._cSocket.send_json(Login.ASK_DATA.dump())
 
         try:
             raw_data = self._cSocket.recv().decode()
@@ -207,6 +208,14 @@ class LoginManager:
             )
             self._cSocket.close()
             raise LostConnectError
+        except WrongEventType as err:
+            self.login_logger.info(
+                f"{log_head} Wrong Event #during wait Login.ACK_DATA"
+                f" (addr='{addr}', reason='{type(err).__name__}: {err}')"
+            )
+            self._cSocket.send_json(Login.FAILED(FailType.INVALID_DATA).dump())
+            self._cSocket.close()
+            raise LostConnectError
         except Exception as err:
             self.login_logger.warn(
                 f"{log_head} An un except exception recv #during wait Login.ACK_DATA"
@@ -215,6 +224,13 @@ class LoginManager:
             self._cSocket.send_json(Login.FAILED(FailType.INVALID_DATA).dump())
             traceback.print_exception(err, file=self.login_logger.warn_file)
             raise
+
+        self._cSocket.settimeout(old_timeout)
+        return data
+
+    def _get_db_client(self) -> DataBaseClient:
+        log_head = f"[LoginManager]"
+        addr = self._cSocket.getpeername()
 
         try:
             client = self._init_db_client()
@@ -239,9 +255,7 @@ class LoginManager:
             self._cSocket.close()
             raise UnableConnectDatabase
 
-        self._cSocket.settimeout(old_timeout)
-
-        return data, client
+        return client
 
     def _find_user_in_db(self, uuid: Base) -> list[LoginData]:
         ls = self.db_client.send_request(STORE.SEARCH(_DBName, self._store, keyword="uuid", value=uuid))
@@ -260,6 +274,19 @@ class LoginManager:
                 )
 
         return ret
+
+    def _write_data_to_db(self, data: LoginData) -> None:
+        for last_data in self._find_user_in_db(self.userdata.uuid):
+            index = self.db_client.send_request(STORE.LOCATE(_DBName, self._store, last_data))
+            print(index)
+            print(self.db_client.send_request(STORE.DEL_LINE(_DBName, self._store, index)))
+
+        self.db_client.send_request(STORE.APPEND(_DBName, self._store, data.ToNamelist()))
+        addr = self._cSocket.getpeername()
+        self.login_logger.debug(
+            f"[LoginManager] Write data to DB"
+            f" (addr='{addr}', uuid='{self.userdata.uuid}', data='{data}')"
+        )
 
 
 __all__ = ("LoginDatabaseFailedError", "LostConnectError", "LoginManager")

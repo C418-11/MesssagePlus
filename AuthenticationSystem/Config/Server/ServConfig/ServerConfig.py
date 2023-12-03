@@ -134,7 +134,9 @@ class _Login(Config, LogMixin):
             os.path.join(self.BASE_DIR, "settings.json"): {
                 "key": "settings",
                 "data": {
-                    "timeout": 5
+                    "timeout": 5,
+                    "loginKeyNextTimeout": 24*60*60,
+                    "loginKeyMaxAllowTimeout": 7*24*60*60,
                 }
             }
         }
@@ -147,6 +149,14 @@ class _Login(Config, LogMixin):
     @property
     def timeout(self):
         return self.settings["timeout"]
+
+    @property
+    def loginKeyNextTimeout(self):
+        return self.settings["loginKeyNextTimeout"]
+
+    @property
+    def loginKeyMaxAllowTimeout(self):
+        return self.settings["loginKeyMaxAllowTimeout"]
 
     @property
     @override

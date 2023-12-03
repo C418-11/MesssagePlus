@@ -21,7 +21,7 @@ class _AskData(Event):
     Name = "Login.ASK_DATA"
 
 
-ASK_DATA = _AskData
+ASK_DATA = _AskData()
 
 
 class ClientTypeNotFind(LookupError):
@@ -36,14 +36,36 @@ class ClientTypeNotFind(LookupError):
         return f"ClientType Not Find (clientType='{self.client_type}')"
 
 
+class WrongEventType(TypeError):
+    def __init__(self, event_type: str):
+        self._event_type = event_type
+
+    @property
+    def event_type(self):
+        return self._event_type
+
+    def __str__(self):
+        return f"Wrong Event Type (eventType='{self.event_type}')"
+
+
 @EventRegister
 class _AckData(EventWithData):
     Name = "Login.ACK_DATA"
 
-    def __init__(self, uuid: Base, login_key: LoginKey, email: str):
+    def __init__(self, uuid: Base, login_key: LoginKey, email: str, password: str):
+        if not isinstance(uuid, Base):
+            raise TypeError(f"uuid must be Base, not {type(uuid)}")
+        if not isinstance(login_key, LoginKey):
+            raise TypeError(f"login_key must be LoginKey, not {type(login_key)}")
+        if not isinstance(email, str):
+            raise TypeError(f"email must be str, not {type(email)}")
+        if not isinstance(password, str):
+            raise TypeError(f"password must be str, not {type(password)}")
+
         self._uuid = uuid
         self._login_key = LoginKey(login_key.key, login_key.timeout_timestamp)
         self._email = email
+        self._password = password
 
     @property
     def uuid(self):
@@ -57,9 +79,17 @@ class _AckData(EventWithData):
     def email(self):
         return self._email
 
+    @property
+    def password(self):
+        return self._password
+
     @classmethod
     @override
     def load(cls, _json):
+        try:
+            _json[cls.Name]
+        except KeyError:
+            raise WrongEventType(cls.Name)
         _json[cls.Name]["uuid"] = Base.fromDict(_json[cls.Name]["uuid"])
         _json[cls.Name]["login_key"] = LoginKey.fromDict(_json[cls.Name]["login_key"])
         return cls(**_json[cls.Name])
@@ -71,6 +101,7 @@ class _AckData(EventWithData):
                 "uuid": self._uuid.toDict(),
                 "login_key": self._login_key.toDict(),
                 "email": self._email,
+                "password": self._password
             }
         }
 
@@ -121,6 +152,11 @@ class FailType(StrEnum):
     INVALID_DATA = "Invalid Data"
     USER_NOT_FOUND = "User Not Found"
     UNKNOWN_SERVER_ERROR = "Unknown Server Error"
+    INVALID_LOGIN_KEY = "Invalid Login Key"
+    LOGIN_KEY_TIMEOUT = "Login Key Timeout"
+    WRONG_PASSWORD = "Wrong Password"
+    WRONG_EMAIL = "Wrong Email"
+    WRONG_VERIFICATION_CODE = "Wrong Verification Code"
 
 
 @EventRegister
@@ -143,7 +179,7 @@ class _LoginFailed(EventWithData, FailEvent):
     def dump(self):
         return {
             self.Name: {
-                "info": self._type,
+                "type_": self._type,
             }
         }
 
@@ -185,6 +221,14 @@ class _AckVerificationCode(EventWithData):
 
 
 ACK_VERIFICATION_CODE = _AckVerificationCode
+
+
+@EventRegister
+class _Register(Event):
+    Name = "Login.REGISTER"
+
+
+REGISTER = _Register()
 
 
 @EventRegister
@@ -232,5 +276,6 @@ __all__ = (
     "FAILED",
     "ASK_VERIFICATION_CODE",
     "ACK_VERIFICATION_CODE",
-    "REGISTER_SUCCESS"
+    "REGISTER",
+    "REGISTER_SUCCESS",
 )

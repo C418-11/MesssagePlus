@@ -3,10 +3,11 @@
 
 
 import socket
-from typing import Optional
+from typing import Optional, Generator
 from typing import override
 from typing import Union
 
+from AuthenticationSystem.Events import Login
 from Lib.SocketIO import Address
 from Lib.SocketIO import SocketIo
 from Lib.simple_tools import Disable
@@ -16,7 +17,7 @@ class Client(SocketIo):
     def __init__(self, address: Union[Address, socket.socket], print_error: bool = True):
         super().__init__(address=address, print_error=print_error)
 
-    def init(self, service_type, timeout: Optional[float]):
+    def init(self, service_type, timeout: Optional[float]) -> Generator[bytes, Login.ACK_DATA, None]:
         old_timeout = self.gettimeout()
         self.settimeout(timeout)
         self.send_json({"type": service_type})
