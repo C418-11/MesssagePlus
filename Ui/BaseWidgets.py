@@ -31,6 +31,9 @@ class GetScale(QWidget):
                 reference_size = self.minimumSize()
         self.reference_size = reference_size
 
+        # noinspection PyUnresolvedReferences
+        self.scaleChanged.connect(self.autoResize)
+
     @showException
     @override
     def resizeEvent(self, event: QResizeEvent):
@@ -46,6 +49,14 @@ class GetScale(QWidget):
             pass
         # noinspection PyUnresolvedReferences
         self.scaleChanged.emit(self.scaleWidth, self.scaleHeight)
+
+    def autoResize(self, scale_width: float, scale_height: float) -> None:
+        """
+        自动调整窗口大小
+        :param scale_width: 窗口宽度比例
+        :param scale_height: 窗口高度比例
+        :return: None
+        """
 
 
 @dataclass

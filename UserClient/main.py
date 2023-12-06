@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from Lib.base_conversion import Base
 from Ui.ChatWindow import UiChatWindow, MessageData
 from Ui.LoginWindow import UiLoginWindow
+from Ui.RegisterWindow import UiRegisterWindow
 from Ui.tools import showException
 from UserClient.login import LoginAuthenticationSystem
 
@@ -45,7 +46,18 @@ def login_window():
     sys.exit(app.exec_())
 
 
+def register_window():
+    app = QApplication(sys.argv)
+    window = QMainWindow()
+    ui = UiRegisterWindow(window)
+    ui.setupUi()
+
+    window.show()
+    sys.exit(app.exec_())
+
+
 def main():
+    # register_window()
     chat_window()
     # login = LoginAuthenticationSystem()
     # login.login()

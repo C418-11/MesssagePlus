@@ -4,6 +4,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow
+from .BaseWidgets import GetScale
 
 from typing import Optional
 
@@ -15,13 +16,13 @@ class UiRegisterWindow(object):
         self.GetEmail: Optional[QtWidgets.QLineEdit] = None
         self.GetPassword: Optional[QtWidgets.QLineEdit] = None
         self.GetVerificationCode: Optional[QtWidgets.QLineEdit] = None
-        self.centralWidget: Optional[QtWidgets.QWidget] = None
+        self.centralWidget: Optional[GetScale] = None
         self.RegisterButton: Optional[QtWidgets.QPushButton] = None
 
     def setupUi(self):
-        self.main_window.setMinimumSize(820, 670)
+        self.main_window.setMinimumSize(570, 475)
 
-        self.centralWidget = QtWidgets.QWidget(self.main_window)
+        self.centralWidget = GetScale(self.main_window)
         self.centralWidget.setObjectName("centralWidget")
 
         self.GetEmail = QtWidgets.QLineEdit(self.centralWidget)
@@ -57,6 +58,7 @@ class UiRegisterWindow(object):
         self.main_window.setCentralWidget(self.centralWidget)
 
         self.ReTranslateUi()
+        self.centralWidget.scaleChanged.connect(self.autoResize)
         QtCore.QMetaObject.connectSlotsByName(self.main_window)
 
     def ReTranslateUi(self):
@@ -66,3 +68,25 @@ class UiRegisterWindow(object):
         self.GetVerificationCode.setPlaceholderText(_translate("RegisterWindow", "请输入验证码..."))
         self.Title.setText(_translate("RegisterWindow", "注册"))
         self.RegisterButton.setText(_translate("RegisterWindow", "注册"))
+
+    def autoResize(self, _scale_width: float, scale_height: float):
+        self.Title.move(
+            int(self.centralWidget.width() / 2 - self.Title.width() / 2 - 3.5),
+            int(70 * scale_height)
+        )
+        self.GetEmail.move(
+            int(self.centralWidget.width() / 2 - self.GetEmail.width() / 2),
+            int(200 * scale_height)
+        )
+        self.GetPassword.move(
+            int(self.centralWidget.width() / 2 - self.GetPassword.width() / 2),
+            int(235 * scale_height)
+        )
+        self.GetVerificationCode.move(
+            int(self.centralWidget.width() / 2 - self.GetVerificationCode.width() / 2),
+            int(270 * scale_height)
+        )
+        self.RegisterButton.move(
+            int(self.centralWidget.width() / 2 - self.RegisterButton.width() / 2),
+            int(360 * scale_height)
+        )
