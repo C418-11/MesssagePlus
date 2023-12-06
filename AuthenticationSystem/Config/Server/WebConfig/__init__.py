@@ -4,5 +4,4 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-
-__all__ = ("ServerConfig", )
+__all__ = ("ServerConfig",)

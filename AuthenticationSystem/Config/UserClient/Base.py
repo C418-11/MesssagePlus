@@ -4,9 +4,9 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+from abc import ABC
 
 from Lib.config.ConfigIO import IO
-from abc import ABC
 
 
 class Config(IO, ABC):

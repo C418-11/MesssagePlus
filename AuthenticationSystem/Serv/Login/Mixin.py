@@ -140,7 +140,7 @@ class LoginMixin(LoginManager):
         status.email_current = self.userdata.email == userdata.email
 
         if login_key.checkTimeout(time.time()):
-            login_key.updateTimeout(time.time()+self.login_Config.loginKeyNextTimeout)
+            login_key.updateTimeout(time.time() + self.login_Config.loginKeyNextTimeout)
             self.userdata.login_key.updateTimeout(login_key.timeout_timestamp)
             self._write_data_to_db(self.userdata)
 

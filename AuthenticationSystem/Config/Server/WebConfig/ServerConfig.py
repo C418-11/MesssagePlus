@@ -6,9 +6,9 @@ __version__ = "0.1"
 
 from typing import override
 
-from ..Base import Config
 from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.config.Progressbar import config_counter
+from ..Base import Config
 
 
 @config_counter

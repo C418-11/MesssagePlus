@@ -6,6 +6,5 @@ __version__ = "0.1"
 
 __all__ = ("WebConfig",)
 
-
 for name in __all__:
     exec("from . import %s" % name)

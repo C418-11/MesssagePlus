@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+from typing import Optional
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow
-from .BaseWidgets import GetScale
 
-from typing import Optional
+from .BaseWidgets import GetScale
 
 
 class UiRegisterWindow(object):

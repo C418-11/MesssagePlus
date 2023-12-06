@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
@@ -9,8 +8,8 @@ import os.path
 from typing import override
 
 from Lib.config.Mixin.LogMixin import LogMixin
-from ..Base import Config
 from Lib.config.Progressbar import config_counter
+from ..Base import Config
 
 
 @config_counter

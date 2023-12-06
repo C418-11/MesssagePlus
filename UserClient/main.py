@@ -14,7 +14,6 @@ from Ui.ChatWindow import UiChatWindow, MessageData
 from Ui.LoginWindow import UiLoginWindow
 from Ui.RegisterWindow import UiRegisterWindow
 from Ui.tools import showException
-from UserClient.login import LoginAuthenticationSystem
 
 
 def chat_window():

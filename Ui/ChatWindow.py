@@ -5,17 +5,16 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-import time
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import count
 from typing import Optional, Union
 
 from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QMetaObject
 from PyQt5.QtCore import QPoint
 from PyQt5.QtCore import QRect
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QResizeEvent
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import QLabel
@@ -26,9 +25,9 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
 from Lib.base_conversion import Base
+from Ui.BaseWidgets import GetScale
 from Ui.BaseWidgets import RoundShadow
 from Ui.BaseWidgets import SmoothlyScrollArea
-from Ui.BaseWidgets import GetScale
 from Ui.tools import add_line_breaks
 
 
@@ -278,7 +277,7 @@ class UiChatWindow(object):
     def autoResize(self, scale_width: float, scale_height: float):
         self.MessageArea.resize(int(500 * scale_width), int(410 * scale_height))
         self.InputArea.move(0, self.MessageArea.height())
-        self.InputArea.resize(int(500*scale_width), int(90*scale_height))
+        self.InputArea.resize(int(500 * scale_width), int(90 * scale_height))
 
 
 __all__ = ("UiChatWindow", "MessageData", "Message")

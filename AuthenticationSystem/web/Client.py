@@ -4,8 +4,8 @@
 
 import socket
 from typing import Optional, Generator
-from typing import override
 from typing import Union
+from typing import override
 
 from AuthenticationSystem.Events import Login
 from Lib.SocketIO import Address
@@ -40,4 +40,4 @@ class Client(SocketIo):
         pass
 
 
-__all__ = ("Client", )
+__all__ = ("Client",)

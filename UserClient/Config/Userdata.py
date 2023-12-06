@@ -6,8 +6,8 @@ __version__ = "0.1"
 
 import os
 
-from .Base import Config
 from Lib.config.Progressbar import config_counter
+from .Base import Config
 
 
 @config_counter

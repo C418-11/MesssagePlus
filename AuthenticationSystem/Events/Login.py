@@ -8,10 +8,10 @@ from enum import StrEnum
 from typing import override
 
 from AuthenticationSystem.Events.Base import Event
+from AuthenticationSystem.Events.Base import EventRegister
 from AuthenticationSystem.Events.Base import EventWithData
 from AuthenticationSystem.Events.Base import FailEvent
 from AuthenticationSystem.Events.Base import SuccessEvent
-from AuthenticationSystem.Events.Base import EventRegister
 from AuthenticationSystem.Serv.Login.Database import LoginKey
 from Lib.base_conversion import Base
 
@@ -265,7 +265,6 @@ class _RegisterSuccess(EventWithData, SuccessEvent):
 
 
 REGISTER_SUCCESS = _RegisterSuccess
-
 
 __all__ = (
     "ASK_DATA",

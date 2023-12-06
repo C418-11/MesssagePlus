@@ -7,8 +7,8 @@ __version__ = "0.1"
 import os.path
 from typing import override
 
-from .Base import Config
 from Lib.config.Progressbar import config_counter
+from .Base import Config
 
 
 @config_counter
@@ -56,4 +56,4 @@ class _Verification(Config):
 
 Verification = _Verification()
 
-__all__ = ("Verification", )
+__all__ = ("Verification",)

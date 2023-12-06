@@ -8,10 +8,10 @@ import os
 from typing import Union
 from typing import override
 
-from ..Base import Config
 from Lib.config.Mixin.LogMixin import LogMixin
 from Lib.config.Progressbar import config_counter
 from Lib.database import logging as db_logging
+from ..Base import Config
 
 
 class Data:
@@ -135,8 +135,8 @@ class _Login(Config, LogMixin):
                 "key": "settings",
                 "data": {
                     "timeout": 5,
-                    "loginKeyNextTimeout": 24*60*60,
-                    "loginKeyMaxAllowTimeout": 7*24*60*60,
+                    "loginKeyNextTimeout": 24 * 60 * 60,
+                    "loginKeyMaxAllowTimeout": 7 * 24 * 60 * 60,
                 }
             }
         }

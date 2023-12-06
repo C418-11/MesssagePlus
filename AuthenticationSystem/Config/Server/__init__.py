@@ -6,6 +6,5 @@ __version__ = "0.1"
 
 __all__ = ("ServConfig", "WebConfig", "APIConfig", "ServerConfig")
 
-
 for module in __all__:
     exec("from .%s import *" % module)

@@ -4,26 +4,26 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
+import sys
 from enum import StrEnum
 from tkinter import messagebox
 from typing import Optional
+
+from PyQt5.QtWidgets import QMainWindow, QApplication
 
 from AuthenticationSystem.Config.UserClient.WebConfig import ClientConfig
 from AuthenticationSystem.Events import Login
 from AuthenticationSystem.Events.Login import FailType
 from AuthenticationSystem.Serv.Login.Database import LoginKey
 from AuthenticationSystem.web.Client import Client
-from UserClient.Config import Userdata
 from Lib.SocketIO import Address
 from Lib.base_conversion import Base
-from Lib.log import Logging
 from Lib.config import Progressbar
+from Lib.log import Logging
 from Ui.LoginWindow import UiLoginWindow
 from Ui.RegisterWindow import UiRegisterWindow
 from Ui.tools import showException
-from PyQt5.QtWidgets import QMainWindow, QApplication
-
-import sys
+from UserClient.Config import Userdata
 
 Progressbar.close()
 
@@ -249,6 +249,7 @@ class LoginAuthenticationSystem:
             def func() -> None:
                 nonlocal client
                 client = self.on_register(register_window, client, log_head)
+
             return func
 
         self.main_window.show()

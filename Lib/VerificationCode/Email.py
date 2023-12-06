@@ -4,14 +4,11 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.1"
 
-
 import random
 import smtplib
 import uuid
-
 from email.header import Header
 from email.mime.text import MIMEText
-
 
 from AuthenticationSystem.Config.Server import APIConfig
 
@@ -65,5 +62,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-
-__all__ = ("verificationSender", )
+__all__ = ("verificationSender",)
