@@ -15,7 +15,7 @@ from AuthenticationSystem.Serv.Base import ABCService
 from AuthenticationSystem.Serv.Base import ABCServicePool
 from AuthenticationSystem.Serv.Base import PoolTypeRegistry
 from AuthenticationSystem.Serv.Base import ServiceTypeRegistry
-from AuthenticationSystem.Serv.Login.Mixin import LoginMixin, InvalidLoginKey, WrongVerificationCode
+from AuthenticationSystem.Serv.Login.Mixin import LoginMixin, InvalidLoginKey, WrongVerificationCode, LoginKeyTimeout
 from AuthenticationSystem.Serv.Login.Mixin import UnableSendVerificationCode
 from AuthenticationSystem.Serv.Login.Mixin import UserNotFound
 from AuthenticationSystem.Serv.Login.Mixin import WrongPassword
@@ -101,6 +101,10 @@ class Client(ABCService, LoginMixin):
                 self.tryRegister(stop)
             stop(0)
         except UserNotFound:
+            self.logger.info(
+                f"[{self.TYPE}] User not found"
+                f" (addr='{self._address}', uuid='{self.userdata.uuid}')"
+            )
             try:
                 event = self._cSocket.recv().decode()
             except (ConnectionError, EOFError):
@@ -110,7 +114,20 @@ class Client(ABCService, LoginMixin):
                 self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
                 self.tryRegister(stop)
             stop(0)
-
+        except LoginKeyTimeout:
+            self.logger.info(
+                f"[{self.TYPE}] Login key timeout"
+                f" (addr='{self._address}', uuid='{self.userdata.uuid}')"
+            )
+            try:
+                event = self._cSocket.recv().decode()
+            except (ConnectionError, EOFError):
+                stop(1)
+                raise
+            if Login.REGISTER.eq_str(event):
+                self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
+                self.tryRegister(stop)
+            stop(0)
         except Exception as err:
             self.logger.error(
                 f"[{self.TYPE}] Unhandled exception occurred!"
@@ -130,17 +147,10 @@ class Client(ABCService, LoginMixin):
 
 
 @ServiceTypeRegistry
-class ChatServer(ABCService, LoginMixin):
+class ChatServer(Client):
     Config = ServerConfig.ChatServerType
     logger = Logging.Logger(Config.log_level, *Config.log_files)
     TYPE = "ChatServer"
-
-    def __init__(self, conn, addr, *_, **__):
-        super().__init__(conn, addr)
-
-    @override
-    def start(self):
-        ...
 
 
 @PoolTypeRegistry

@@ -139,10 +139,11 @@ class LoginMixin(LoginManager):
         status.password_current = self.userdata.password == userdata.password
         status.email_current = self.userdata.email == userdata.email
 
-        if login_key.checkTimeout(time.time()):
+        if login_key.checkTimeout(time.time()) and not status.loginKey_timeout:
             login_key.updateTimeout(time.time() + self.login_Config.loginKeyNextTimeout)
             self.userdata.login_key.updateTimeout(login_key.timeout_timestamp)
             self._write_data_to_db(self.userdata)
+            status.loginKey_timeout = False
 
         if all([
             status.loginKey_current,

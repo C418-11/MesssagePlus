@@ -279,7 +279,8 @@ class LoginManager:
         for last_data in self._find_user_in_db(self.userdata.uuid):
             index = self.db_client.send_request(STORE.LOCATE(_DBName, self._store, last_data))
             print(index)
-            print(self.db_client.send_request(STORE.DEL_LINE(_DBName, self._store, index)))
+            for i in index:
+                print(self.db_client.send_request(STORE.DEL_LINE(_DBName, self._store, i)))
 
         self.db_client.send_request(STORE.APPEND(_DBName, self._store, data.ToNamelist()))
         addr = self._cSocket.getpeername()

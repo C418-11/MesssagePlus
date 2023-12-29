@@ -14,6 +14,7 @@ from Ui.ChatWindow import UiChatWindow, MessageData
 from Ui.LoginWindow import UiLoginWindow
 from Ui.RegisterWindow import UiRegisterWindow
 from Ui.tools import showException
+from UserClient.login import LoginAuthenticationSystem, ReCallFunc
 
 
 def chat_window():
@@ -56,10 +57,14 @@ def register_window():
 
 
 def main():
+    # login_window()
     # register_window()
-    chat_window()
-    # login = LoginAuthenticationSystem()
-    # login.login()
+    # chat_window()
+    login = LoginAuthenticationSystem()
+    try:
+        login.login()
+    except ReCallFunc:
+        login.login()
 
 
 if __name__ == "__main__":
