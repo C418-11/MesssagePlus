@@ -77,6 +77,17 @@ class Client(ABCService, LoginMixin):
             self.db_client.close()
             sys.exit(_status)
 
+        def tryReRegister():
+            try:
+                event = self._cSocket.recv().decode()
+            except (ConnectionError, EOFError):
+                stop(1)
+                raise
+            if Login.REGISTER.eq_str(event):
+                self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
+                self.tryRegister(stop)
+            stop(0)
+
         try:
             self.login()
             return
@@ -91,43 +102,19 @@ class Client(ABCService, LoginMixin):
                 f"[{self.TYPE}] Invalid login key"
                 f" (addr='{self._address}', uuid='{self.userdata.uuid}')"
             )
-            try:
-                event = self._cSocket.recv().decode()
-            except (ConnectionError, EOFError):
-                stop(1)
-                raise
-            if Login.REGISTER.eq_str(event):
-                self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
-                self.tryRegister(stop)
-            stop(0)
+            tryReRegister()
         except UserNotFound:
             self.logger.info(
                 f"[{self.TYPE}] User not found"
                 f" (addr='{self._address}', uuid='{self.userdata.uuid}')"
             )
-            try:
-                event = self._cSocket.recv().decode()
-            except (ConnectionError, EOFError):
-                stop(1)
-                raise
-            if Login.REGISTER.eq_str(event):
-                self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
-                self.tryRegister(stop)
-            stop(0)
+            tryReRegister()
         except LoginKeyTimeout:
             self.logger.info(
                 f"[{self.TYPE}] Login key timeout"
                 f" (addr='{self._address}', uuid='{self.userdata.uuid}')"
             )
-            try:
-                event = self._cSocket.recv().decode()
-            except (ConnectionError, EOFError):
-                stop(1)
-                raise
-            if Login.REGISTER.eq_str(event):
-                self.logger.info(f"[{self.TYPE}] Register (addr='{self._address}', uuid='{self.userdata.uuid}')")
-                self.tryRegister(stop)
-            stop(0)
+            tryReRegister()
         except Exception as err:
             self.logger.error(
                 f"[{self.TYPE}] Unhandled exception occurred!"

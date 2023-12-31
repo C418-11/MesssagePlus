@@ -180,6 +180,9 @@ class IO(ABC, BaseIO):
             self._logger.info(f"[Config] Write default config (path='{path}')")
             return self.DEFAULT_FILES[raw]["data"]
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} data={self.data} default_files={self.DEFAULT_FILES}>"
+
     def __getattribute__(self, item):
         try:
             return object.__getattribute__(self, item)
