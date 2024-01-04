@@ -177,7 +177,11 @@ class LoginAuthenticationSystem:
                 raise ReCallFunc
             elif failed_type == FailType.LOGIN_KEY_TIMEOUT:
                 self.logger.error(f"{log_head} Connection fail # Login key timeout (key='{self.Userdata.login_key}')")
-                self.register(uuid=self.Userdata.uuid, email=self.Userdata.email, password=self.Userdata.password)
+                self.register(
+                    uuid=Base(self.Userdata.uuid, self.Userdata.uuid_base),
+                    email=self.Userdata.email,
+                    password=self.Userdata.password
+                )
                 raise ReCallFunc
             raise LoginFailed(failed_type, client)
 
