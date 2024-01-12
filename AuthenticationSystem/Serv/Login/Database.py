@@ -48,12 +48,12 @@ class LoginKey:
 
     def updateTimeout(self, timestamp: float) -> None:
         """
-        :param timestamp: 所要更新的时间戳
+        :param timestamp: 所要更新到的时间戳
         """
-        if timestamp < self._timeout_timestamp:
-            # 不能小于原来的时间戳
+        if timestamp <= self._timeout_timestamp:
+            # 不能小于等于原来的时间戳
             raise ValueError(
-                f"Cannot be less than the original timestamp"
+                f"The timestamp {timestamp} is less than the current timestamp {self._timeout_timestamp}"
                 f" (old={self._timeout_timestamp}, new={timestamp}"
             )
         self._timeout_timestamp = timestamp
