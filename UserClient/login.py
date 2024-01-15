@@ -166,7 +166,6 @@ class LoginAuthenticationSystem:
         event: str
 
         if Login.FAILED.eq_str(event):
-            print(event)
             failed_type = Login.FAILED.loadStr(event).type
             failed_type: FailType
             if failed_type == FailType.WRONG_PASSWORD:
@@ -230,8 +229,6 @@ class LoginAuthenticationSystem:
                 )
             )).decode()
             event: str
-
-            print(event)
 
             try:
                 next(init)
