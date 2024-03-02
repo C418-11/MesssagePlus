@@ -25,12 +25,15 @@ if not config.userEmail or not config.userPassword:
 
 
 def verificationSender(recv: str) -> list[str]:
-    code_ls = random.choices(str(uuid.uuid4()), k=6)
+    ls = [str(uuid.uuid4()) for _ in range(3)]
+    code_ls = random.choices(''.join(ls), k=6)
     code_ls: list[str]
 
     for x in range(len(code_ls)):
         if int(random.random() + 0.5):
             code_ls[x] = code_ls[x].upper()
+            if code_ls[x] == "-":
+                code_ls[x] = "+"
 
     code_str = ''.join(code_ls)
 
